@@ -1,2 +1,2 @@
-# ServerPlaningPoker
+# ServerPlanningPoker
 This repo is project server part for common project PlanningPoker
