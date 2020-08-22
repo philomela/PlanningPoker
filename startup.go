@@ -1,31 +1,54 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+
 	"net"
+	"os"
 
 	"./ServerPlanningPoker"
 	_ "github.com/denisenkom/go-mssqldb"
 )
 
 func main() {
+	var currentServersSettings ServerPlanningPoker.ServersSettings
 	var currentServer net.Listener
 	var err error
-	currentServer, err = ServerPlanningPoker.Server{ProtocolServer: "tcp", Port: ":4545"}.GetServer()
+
+	/* Открываем, читаем и парсим json */
+	jsonFile, err := os.Open("serversSettings.json")
+
+	if err != nil {
+		fmt.Println(err)
+		return //Добавить реализацию логирования ошибок в базу
+	} else {
+		defer jsonFile.Close()
+
+		byteArrayJsonSettings, _ := ioutil.ReadAll(jsonFile)
+		json.Unmarshal(byteArrayJsonSettings, &currentServersSettings)
+		fmt.Println("Server succsesful configured. ©Roman Solovyev/Andrew Zabolotniy")
+	}
+
+	/* Получаем экземпляры серверов */
+	currentServer, err = ServerPlanningPoker.Server{ProtocolServer: currentServersSettings.ServerPlanningPoker.ProtocolServer, Port: currentServersSettings.ServerPlanningPoker.Port}.GetServer()
+
+	if err != nil {
+		fmt.Println(err)
+		return //Добавить реализацию логирования ошибок в базу
+	} else {
+		fmt.Println("Server started and listening port: " + currentServersSettings.ServerPlanningPoker.Port)
+	}
+
+	currenSqlServer, err := ServerPlanningPoker.ServerSql{DSN: currentServersSettings.SQLServer.DSN, TypeSql: currentServersSettings.SQLServer.TypeSql}.OpenConnection()
 
 	if err != nil {
 		fmt.Println(err)
 		return //Добавить реализацию логирования ошибок в базу
 	}
 
-	//currenSqlServer, err := ServerPlanningPoker.ServerSql{DSN: "sqlserver://u0932131_admin:RomanAndrey46@31.31.196.202/instance?database=u0932131_planningPoker", TypeSql: "mssql"}.OpenConnection()
-	currenSqlServer, err := ServerPlanningPoker.ServerSql{DSN: "server=31.31.196.202;user id=u0932131_admin;password=RomanAndrey46;database=u0932131_planningPoker", TypeSql: "mssql"}.OpenConnection()
-
-	if err != nil {
-		fmt.Println(err)
-		return //Добавить реализацию логирования ошибок в базу
-	}
-
+	/* Общаемся с базой */
 	result, err := currenSqlServer.Query("SELECT * FROM test") //Делаем запрос к тестовой базе
 	if err != nil {
 		fmt.Println(err)
@@ -38,5 +61,13 @@ func main() {
 	}
 
 	fmt.Printf(collection[0]) //Выводим в сообщении, первое название поля из таблицы Test
+
+	currenSqlServer.Exec("EXECUTE SaveError 'Error test'")
+	if err != nil {
+		fmt.Println(err)
+		return //Добавить реализацию логирования ошибок в базу
+	}
+
 	currentServer.Accept()
+	//currentServer.
 }
