@@ -15,4 +15,4 @@
 # vendor/
 
 #Db-files
-*.DB_Store
+*.DS_Store
