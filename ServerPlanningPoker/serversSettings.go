@@ -1,6 +1,11 @@
 package ServerPlanningPoker
 
 type ServersSettings struct {
-	ServerPlanningPoker Server
-	SQLServer           ServerSql
+	SQLServer  ServerSql
+	ServerHost ServerHost
+}
+
+type ServerHost struct {
+	Host string
+	Room string
 }
