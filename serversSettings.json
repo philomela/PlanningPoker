@@ -1,0 +1,14 @@
+{
+    "ServerPlanningPoker": {
+        "ProtocolServer": "tcp",
+        "Port": ":4545"
+    },
+    "SQLServer": {
+        "DSN": "server=31.31.196.202;user id=u0932131_admin;password=RomanAndrey46;database=u0932131_planningPoker",
+        "TypeSql": "mssql"
+    },
+    "ServerHost": {
+        "Host": "http://localhost/",
+        "Room": "rooms/?roomId="
+    }
+}

@@ -17,5 +17,5 @@ func (serverSql ServerSql) ConfigureSqlServer(DSN string, TypeSql string) {
 }
 
 func (serverSql ServerSql) OpenConnection() (*sql.DB, error) {
-	return sql.Open(serverSql.TypeSql, serverSql.DSN)
+	return sql.Open(serverSql.TypeSql, serverSql.DSN) //Переписать реализацию и не открывать экземпляр один для всех обработчиков
 }
