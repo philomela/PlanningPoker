@@ -9,6 +9,6 @@
     },
     "ServerHost": {
         "Host": "http://localhost/",
-        "Room": "rooms/?roomId="
+        "Room": "rooms?roomId="
     }
 }
