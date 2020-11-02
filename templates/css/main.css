@@ -1,0 +1,59 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: #f8f9fa;
+}
+header {
+    
+}
+main {
+    background: url('/templates/img/igralnye-kosti.png');
+    background-size: cover;
+    
+    background-color: #48173e;
+    
+}
+.main-slide {
+    height: 350px;
+}
+.left-main-block {
+    color: #FCF8FF;
+}
+.right-main-block {
+    color: #FCF8FF;
+}
+.controls-block {
+    --height: 200px;
+}
+.create-room {
+    background-color: #40AA29;
+    color: white;
+    --width: 300px;
+}
+article {
+    --height: 400px;
+}
+.left-article-block  {
+    
+}
+.right-article-block {
+
+}
+.article-img {
+    --display: inline-block;
+}
+footer {
+    background-color: yellow;
+}
+.footer-block {
+    background-color: aqua;
+}
+.btn-primary {
+    background: #f8f9fa;
+    color: #40AA29;
+    border: 1px solid #40AA29;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
+    color: #f8f9fa;
+    background: #40AA29;
+    border: 1px solid #40AA29;
+}

@@ -1,0 +1,87 @@
+<html>
+    <head></head>
+    <body>
+        <div id='body'></div>  
+        <script
+  src="https://code.jquery.com/jquery-3.5.1.slim.js"
+  integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM="
+  crossorigin="anonymous"></script>  
+        <button id='red'>Send Red</button>
+        <button id='blue'>Send Blue</button>
+        <button id='yellow'>Send Yellow</button>
+        <button id='green'>Send Green</button>
+        
+        <form action="." method="GET">
+            <input id="roomId" type="text" name="roomId">
+            <input id="sendRoomId" type="button" name="Send">Войти</input>
+        </form>
+        
+        <script type="text/javascript">
+            var socketInst
+            
+            $.extend({
+  getUrlVars: function(){
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    return vars;
+  },
+  getUrlVar: function(name){
+    return $.getUrlVars()[name];
+  }
+});
+
+            function createWebSocket(queryParam) {
+                socketInst = new WebSocket('ws://localhost:80/echo?roomId='+$.getUrlVar('roomId'));
+                socketInst.onopen = function(event){
+                //socketInst.send($("input[name='roomId']").val());
+                //SendColor('red');
+                
+            }
+            socketInst.onmessage = function(event){
+                // let p = document.createElement('p');
+                // p.innerText = event.data;
+                // document.body.append(p);
+                //document.write(event.data)     
+                //$('body').css('background', event.data)  
+                alert(event.data);     
+            }
+            }
+            
+
+            function SendColor(color) {
+                socketInst.send(color)
+            }
+
+            // $('#sendRoomId').click(()=>{
+            //     var roomId = $("input[name='roomId']").val()
+            //     createWebSocket(roomId);
+            // }           
+            // );
+
+            $('#red').click(()=>{
+                socketInst.send($("input[name='roomId']").val())             
+            });
+            $('#blue').click(()=>{
+                SendColor('blue')              
+            });
+            $('#yellow').click(()=>{
+                SendColor('yellow')              
+            });
+            $('#green').click(()=>{
+                SendColor('green')              
+            });
+            
+            var roomId = $("input[name='roomId']").val()
+                createWebSocket(roomId);
+            
+            
+        </script>
+
+    </body>
+</html>
