@@ -28,22 +28,29 @@ func (s *SessionsTool) CreateNewSession(loginUser string, r *http.Request, w *ht
 
 func (s *SessionsTool) CheckAndUpdateSession(r *http.Request, w *http.ResponseWriter) bool {
 	s.currentSession, s.currError = s.sessionStore.Get(r, "session")
-	//if s.currError != nil {
-	//	http.Redirect(*w, r, "/loginform", 301)
-	//}
+
 	fmt.Println(s.currentSession)
 	untyped, ok := s.currentSession.Values["UserLogin"]
 	if !ok {
-		//http.Redirect(*w, r, "/loginform", 301)
 		return false
 	}
 	userLogin, ok := untyped.(string)
 	if !ok {
-		//http.Redirect(*w, r, "/loginform", 301)
 		return false
 	}
 	fmt.Println(userLogin)
 
 	s.currentSession.Save(r, *w)
 	return true
+}
+
+func (s *SessionsTool) GetUserLoginSession(r *http.Request) string {
+	s.currentSession, s.currError = s.sessionStore.Get(r, "session")
+
+	fmt.Println(s.currentSession)
+	userLogin, ok := s.currentSession.Values["UserLogin"]
+	if !ok {
+		return ""
+	}
+	return userLogin.(string)
 }

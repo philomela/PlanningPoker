@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/smtp"
 	"os"
 	"strings"
 
@@ -61,6 +62,7 @@ func main() {
 	r.HandleFunc("/echo", echoSocket).Methods("GET")
 	r.HandleFunc("/room", roomHandler).Methods("GET")
 	r.HandleFunc("/registrationform", registrationFormHandler).Methods("GET")
+	r.HandleFunc("/registration", registrationHandler).Methods("POST")
 	r.HandleFunc("/", indexHandler).Methods("GET")
 	r.PathPrefix("/templates/").Handler(http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 
@@ -127,7 +129,7 @@ func roomsHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(roomId)
 	fmt.Println(success)
 	if success == "true" {
-		//http.Redirect(w, r, "/room/?roomId="+roomId, 301)
+
 		tmpl, _ := template.ParseFiles("templates/rooms.html")
 		tmpl.Execute(w, data)
 	}
@@ -135,6 +137,11 @@ func roomsHandler(w http.ResponseWriter, r *http.Request) {
 
 /*Метод создания новой комнаты с задачами*/
 func createRoomHandler(w http.ResponseWriter, r *http.Request) {
+	resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
+	if !resultCheckCookie {
+		return //Добавить сообщение не авторизованного пользователя
+	}
+	userLogin := sessionsTool.GetUserLoginSession(r)
 	nameRoom := r.FormValue("nameRoom")
 	xmlTasks := r.FormValue("xmlTasks")
 	if len(nameRoom) == 0 && len(xmlTasks) == 0 {
@@ -144,8 +151,8 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 	var roomId string
 	fmt.Println(nameRoom)
 	fmt.Println(xmlTasks)
-	//ctx := context.Background()
-	resultSP, err := currentSqlServer.Query(`EXEC [NewPlanningPokerRoom] @NameRoom=?, @Tasks=?;`, nameRoom, xmlTasks)
+
+	resultSP, err := currentSqlServer.Query(`EXEC [NewPlanningPokerRoom] @NameRoom=?, @Tasks=?, @Creator=?;`, nameRoom, xmlTasks, userLogin)
 
 	if err != nil {
 		log.Println(err)
@@ -169,6 +176,7 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	login := r.FormValue("loginUser")
 	password := r.FormValue("password")
+	//Проверки логин/пароль
 	if len(login) > 0 && len(password) > 0 {
 		resultSP, err := currentSqlServer.Query(`EXEC [CheckUser] ?, ?`, login, password)
 		if err != nil {
@@ -177,6 +185,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		var resultCkeck bool
 		for resultSP.Next() {
 			err := resultSP.Scan(&resultCkeck)
+			fmt.Println(resultCkeck)
 			if err != nil {
 				fmt.Println(err)
 				continue //Добавить реализацию логирования ошибок в базу
@@ -185,14 +194,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		if resultCkeck {
 
 			sessionsTool.CreateNewSession(login, r, &w)
+			requestURL := r.Header.Get("Referer")
+			println(requestURL)
+			if requestURL == currentServersSettings.ServerHost.Host+"newroom" {
 
-			// cookie := &http.Cookie{
-			// 	Name:    cookieName,
-			// 	Value:   sessionId,
-			// 	Expires: time.Now().Add(5 * time.Minute),
-			// }
-			// http.SetCookie(w, cookie)
-			w.Write([]byte("Succsess"))
+				w.Write([]byte(requestURL))
+			}
 			return
 		}
 	}
@@ -200,7 +207,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Wrong"))
 }
 
-/*Метод отображения формы фхода*/
+/*Метод отображения формы входа*/
 func loginFormHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.ServeFile(w, r, "templates/loginForm.html")
@@ -208,25 +215,18 @@ func loginFormHandler(w http.ResponseWriter, r *http.Request) {
 
 /*Метод отображения страницы создания комнаты*/
 func newRoomHandler(w http.ResponseWriter, r *http.Request) {
-
 	resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
 
 	fmt.Println(resultCheckCookie)
 
 	if resultCheckCookie {
-
-		data := ""
 		tmpl, _ := template.ParseFiles("templates/newPlanningPokerRoom.html")
-		tmpl.Execute(w, data)
-		//http.ServeFile(w, r, "templates/newPlanningPokerRoom.html")
+		tmpl.Execute(w, nil)
 		return
 
 	} else {
-
-		//ttp.ServeFile(w, r, "templates/loginForm.html") //Проверка сессии в cookie
-		data := ""
 		tmpl, _ := template.ParseFiles("templates/loginForm.html")
-		tmpl.Execute(w, data)
+		tmpl.Execute(w, nil)
 		return
 	}
 	return
@@ -237,7 +237,7 @@ func newRoomHandler(w http.ResponseWriter, r *http.Request) {
 func roomHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/room.html")
 	tmpl.Execute(w, nil)
-	//http.ServeFile(w, r, "templates/room.html")
+	return
 }
 
 /*Метод upgare запроса до протокола WebSocket*/
@@ -253,10 +253,6 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	currentSqlServer.Query(`EXEC [CreateConnection] @UUID=?, @RoomId=?`, Conn.UUID.String(), Conn.rooomId)
 	conns = append(conns, Conn)
-
-	//collectionRoom[URL] = conns
-	//conn.WriteMessage(1, []byte(URL))
-	//conn.WriteMessage(1, []byte("Hello, I'm TCP server"))
 	println(conns)
 	println(URL)
 	for {
@@ -289,18 +285,61 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func registrationHandler(w http.ResponseWriter, r *http.Request) {
+	email := r.FormValue("email")
+	userName := r.FormValue("userName")
+	password := r.FormValue("password")
+
+	if len(email) > 0 && len(password) > 0 && len(userName) > 0 {
+		resultSP, err := currentSqlServer.Query(`EXECUTE Add_User @LoginName=?, @Email=?, @Password=?`, userName, email, password)
+		if err != nil {
+			log.Println(err)
+		}
+		var resultCheck string
+		for resultSP.Next() {
+			err := resultSP.Scan(&resultCheck)
+			if err != nil {
+				fmt.Println(err)
+				continue //Добавить реализацию логирования ошибок в базу
+			}
+		}
+		if resultCheck == "Succsess" {
+			w.Write([]byte(resultCheck))
+			go func(ss ServerPlanningPoker.ServersSettings) {
+				from := ss.SmtpServer.LoginHost
+				to := "romaphilomela@yandex.ru"
+				host := ss.SmtpServer.Host
+				auth := smtp.PlainAuth("", from, ss.SmtpServer.PassHost, host)
+				fmt.Println(ss.SmtpServer.PassHost)
+				message := "To: romaphilomela@yandex.ru\r\n" +
+					"Subject: discount Gophers!\r\n" +
+					"\r\n" +
+					"This is the email body.\r\n"
+
+				if err := smtp.SendMail(host+ss.SmtpServer.PortHost, auth, from, []string{to}, []byte(message)); err != nil {
+					fmt.Println("Error SendMail: ", err)
+				}
+				fmt.Println("Email Sent!") //Перепроверить отправку сообщений
+			}(currentServersSettings)
+			return
+		} else {
+			w.Write([]byte(resultCheck))
+			return
+		}
+	} else {
+		w.Write([]byte("pass or email or login was empty"))
+		return
+	}
+}
+
 func registrationFormHandler(w http.ResponseWriter, r *http.Request) {
-	//view := loadPage("templates/pages/index_page")
-	//view, _ := template.ParseFiles("templates/pages/index_page.html")
 	tmpl, _ := template.ParseFiles("templates/registrationForm.html")
 	tmpl.Execute(w, nil)
-	//http.ServeFile(w, r, "templates/index.html")
+	return
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	//view := loadPage("templates/pages/index_page")
-	//view, _ := template.ParseFiles("templates/pages/index_page.html")
 	tmpl, _ := template.ParseFiles("templates/index.html")
 	tmpl.Execute(w, nil)
-	//http.ServeFile(w, r, "templates/index.html")
+	return
 }

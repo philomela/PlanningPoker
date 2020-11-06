@@ -117,7 +117,7 @@
             $.ajax({
             type: "POST",
             url: "../create-room",
-            data: `nameRoom=${nameRoom}&xmlTasks=${xmlTasks}}`,
+            data: `nameRoom=${nameRoom}&xmlTasks=${xmlTasks}`,
             success: function(msg){
             $('#link-room').val(msg);
             }});

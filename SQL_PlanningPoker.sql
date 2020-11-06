@@ -37,16 +37,9 @@ CREATE TABLE ServerPlanningPoker.Rooms(
     Id INT PRIMARY KEY IDENTITY,
     NameRoom VARCHAR(200),
     Created DATETIME2,
+    IsActive BIT,
+    Creator INT,
     [GUID] VARCHAR(36)
-)
-GO 
-
-/*Таблица коннекшинов*/
-CREATE TABLE ServerPlanningPoker.Connections(
-    Id INT PRIMARY KEY,
-    [GUID] VARCHAR(36),
-    RoomId INT REFERENCES ServerPlanningPoker.Rooms (Id) ON DELETE CASCADE,
-    PersonId INT REFERENCES ServerPlanningPoker.Persons (Id) ON DELETE CASCADE
 )
 GO 
 
@@ -56,9 +49,19 @@ CREATE TABLE ServerPlanningPoker.Persons(
     LoginName VARCHAR(50) UNIQUE,
     Email VARCHAR(100) UNIQUE,
     [Password] VARCHAR(100),
-    [Token] UNIQUEIDENTIFIER   
+    [Token] VARCHAR(36)   
 )
 GO
+
+/*Таблица коннекшинов*/
+CREATE TABLE ServerPlanningPoker.Connections(
+    Id INT PRIMARY KEY,
+    [GUID] VARCHAR(36),
+    DateConnection DATETIME2,
+    RoomId INT REFERENCES ServerPlanningPoker.Rooms (Id) ON DELETE CASCADE,
+    PersonId INT REFERENCES ServerPlanningPoker.Persons (Id) ON DELETE CASCADE
+)
+GO 
  
 /*Таблица наблюдаемого(Активные вью модели)*/
 CREATE TABLE ServerPlanningPoker.ViewModels(
@@ -81,36 +84,45 @@ GO
 /*Процедура добавление нового пользователя*/
 CREATE PROCEDURE [Add_User](@LoginName VARCHAR(50), 
                             @Email VARCHAR(100), 
-                            @Password VARCHAR(30), 
-                            @UIDRoom VARCHAR(100))
+                            @Password VARCHAR(30))
     AS 
-        BEGIN TRANSACTION
-            IF EXISTS (SELECT Id FROM ServerPlanningPoker.Rooms WHERE GUID = @UIDRoom)
-            AND NOT EXISTS (SELECT Id FROM ServerPlanningPoker.Persons WHERE Email = @Email)
-                BEGIN
-                    BEGIN TRY 
-                        INSERT INTO ServerPlanningPoker.Persons(LoginName, Email, [Password])
-                        VALUES (@LoginName, @Email, @Password);
-                        
-                        --UPDATE ServerPlanningPoker.Rooms 
-                        --SET 
-                        COMMIT;
-                    END TRY
-                    BEGIN CATCH
-                        ROLLBACK;
-                    END CATCH
-                END       
+        BEGIN TRANSACTION        
+                BEGIN TRY
+                    IF EXISTS (SELECT Id FROM ServerPlanningPoker.Persons WHERE Email = @Email AND LoginName = @LoginName)
+                    BEGIN
+                        SELECT 'User with a pair of login/email exist'
+                    END
+                    ELSE IF EXISTS (SELECT Id FROM ServerPlanningPoker.Persons WHERE Email = @Email)
+                    BEGIN
+                        SELECT 'User with this email exists'
+                    END
+                    ELSE IF EXISTS (SELECT Id FROM ServerPlanningPoker.Persons WHERE LoginName = @LoginName)
+                    BEGIN
+                        SELECT 'User with this login exists'
+                    END    
+                    ELSE 
+                    BEGIN
+                    INSERT INTO ServerPlanningPoker.Persons(LoginName, Email, [Password], Token)
+                        VALUES (@LoginName, @Email, @Password, NEWID());
+                        SELECT 'Succsess'  
+                    END           
+                      COMMIT;              
+                END TRY
+                BEGIN CATCH
+                    ROLLBACK;
+                END CATCH
 GO
 
 /*Процедура формирования новой комнаты*/
 CREATE PROCEDURE [NewPlanningPokerRoom](@NameRoom VARCHAR(200), 
-                                        @Tasks XML)
+                                        @Tasks XML,
+                                        @Creator VARCHAR(50))
     AS  
         BEGIN TRANSACTION
             BEGIN TRY
                 DECLARE @LastIdRoom INT;
-                INSERT INTO ServerPlanningPoker.Rooms (NameRoom, Created, [GUID])
-                VALUES (@NameRoom, CURRENT_TIMESTAMP, NEWID());
+                INSERT INTO ServerPlanningPoker.Rooms (NameRoom, Created, IsActive, Creator, [GUID])
+                VALUES (@NameRoom, CURRENT_TIMESTAMP, 1, (SELECT Id FROM ServerPlanningPoker.Persons WHERE LoginName = @Creator),  NEWID());
 
                 SELECT TOP(1) @LastIdRoom = Id FROM ServerPlanningPoker.Rooms ORDER BY Id DESC;
 
@@ -127,6 +139,7 @@ CREATE PROCEDURE [NewPlanningPokerRoom](@NameRoom VARCHAR(200),
                 ROLLBACK;
             END CATCH      
 GO
+
 /*Процедура создания и привязки коннекшенов к комнате*/
 CREATE PROCEDURE [CreateConnection](@UUID VARCHAR(36), 
                                     @RoomId INT)
@@ -158,28 +171,16 @@ CREATE PROCEDURE [CheckUser] (@email VARCHAR(100),
         SELECT @ResultCheck;
 GO
 
-/*Таблица сессиий*/
-CREATE TABLE ServerPlanninPoker.Sessions (
-    Id BIGINT IDENTITY PRIMARY KEY,
-    SessionId VARCHAR(300) NOT NULL,
-    CreateDate DATETIME2 NOT NULL,
-    EndDate DATETIME2 NOT NULL,
-    PersonId INT FOREIGN KEY REFERENCES ServerPlanningPoker.Persons (Id) ON DELETE CASCADE
-)
-
-/*Процедура добавления новой сессии*/
-CREATE PROCEDURE [AddSession] (@SessionId VARCHAR(300),
-                                @CreateDate DATETIME2,
-                                @PersonId)
 
 INSERT INTO ServerPlanningPoker.Persons(LoginName, Email, [Password], Token) 
-VALUES('Roma', 'romaphilomela@yandex.ru', 'Rom@nkhik', NEWID())
+VALUES('Roma2', 'romaphilomela@yandex2.ru', 'Rom@nkhik', NEWID())
                 
-EXECUTE CheckUser 'romaphilomela@yandex.ru', 'Rom@nkhi'
-SELECT * FROM ServerPlanningPoker.
+EXECUTE CheckUser 'romaphilomela@yandex.ru', 'Rom@nkhik'
+SELECT * FROM ServerPlanningPoker.Persons
 
+EXECUTE Add_User 'philomeela', 'romaphilomela@yandex.ru', 'Rom@nkhik'
 
-
+SELECT * FROM ServerPlanningPoker.Persons
 
 DECLARE @ret VARCHAR(300);
 EXEC [NewPlanningPokerRoom] 'RoomTdsdsdest', '
@@ -218,6 +219,10 @@ DROP TABLE ServerPlanningPoker.Rooms
 DROP TABLE ServerPlanningPoker.ErrorsLog_Server 
 DROP TABLE ServerPlanningPoker.Connections
 DROP TABLE ServerPlanningPoker.ViewModels
+DROP TABLE ServerPlanningPoker.Persons
+DROP PROCEDURE u0932131_admin.NewPlanningPokerRoom
+DROP PROCEDURE u0932131_admin.Add_User
+DROP TABLE ServerPlanningPoker.Sessions
 
 
 SELECT RegExp() FROM ServerPlanningPoker.Rooms 
