@@ -57,3 +57,43 @@ footer {
     background: #40AA29;
     border: 1px solid #40AA29;
 }
+
+#warning {
+    color: red;
+}
+
+.main-room {
+    --background-color: bisque;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+    height: 500px;
+}
+.left-menu-room {
+    --background-color: bisque;
+    height: 500px;
+}
+
+.right-menu-room {
+    --background-color: blue;
+    list-style-type: none;
+    height: 500px;
+}
+.right-menu-room ul {
+    padding: 0;
+}
+
+.right-menu-room li {
+    list-style-type: none;
+    padding: 0;
+}
+
+.task-room {
+    border: 1px solid black;
+    border-radius: 10px;
+    margin-bottom: 5px;
+}
+
+.button-room {
+    width: 100px;
+    height: 300px;
+}
