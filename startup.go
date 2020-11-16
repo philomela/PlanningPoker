@@ -1,8 +1,9 @@
 package main
 
 import (
+	RoomInteraction "ServerPlanningPoker/RoomInteraction"
 	ServerPlanningPoker "ServerPlanningPoker/ServerPlanningPoker"
-	sessions "ServerPlanningPoker/Sessions"
+	Sessions "ServerPlanningPoker/Sessions"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -22,13 +23,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type connection struct {
-	conn    *websocket.Conn
-	rooomId string
-	UUID    uuid.UUID
-}
-
-var conns []connection
+var conns []RoomInteraction.Connection
 
 type connections []*websocket.Conn
 
@@ -37,7 +32,7 @@ type connections []*websocket.Conn
 /* Открываем, читаем и парсим json */
 
 var client *redis.Client
-var sessionsTool = sessions.InitSessionsTool()
+var sessionsTool = Sessions.InitSessionsTool()
 
 var currentServersSettings ServerPlanningPoker.ServersSettings
 var currentSqlServer *sql.DB
@@ -235,48 +230,77 @@ func newRoomHandler(w http.ResponseWriter, r *http.Request) {
 
 /*Метод отображения приглашения входа в комнату*/
 func roomHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, _ := template.ParseFiles("templates/room.html")
-	tmpl.Execute(w, nil)
+	resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
+
+	fmt.Println(resultCheckCookie)
+
+	if resultCheckCookie {
+		tmpl, _ := template.ParseFiles("templates/room.html")
+		tmpl.Execute(w, nil)
+		return
+
+	} else {
+		tmpl, _ := template.ParseFiles("templates/loginForm.html")
+		tmpl.Execute(w, nil)
+		return
+	}
 	return
 }
 
 /*Метод upgare запроса до протокола WebSocket*/
 func echoSocket(w http.ResponseWriter, r *http.Request) {
-	var URL = r.URL.Query()["roomId"][0]
-	var Conn connection
-	Conn.conn, _ = upgrader.Upgrade(w, r, nil)
-	Conn.rooomId = URL
+	var (
+		URL    = r.URL.Query()["roomId"][0]
+		Conn   RoomInteraction.Connection
+		Change RoomInteraction.Change = RoomInteraction.NewChangesViewModel()
+	)
+	Conn.Conn, _ = upgrader.Upgrade(w, r, nil)
+	Conn.RoomGUID = URL
 	Conn.UUID, err = uuid.NewUUID()
 	if err != nil {
 		fmt.Println(err)
 		return //Добавить реализацию логирования ошибок в базу
 	}
-	currentSqlServer.Query(`EXEC [CreateConnection] @UUID=?, @RoomId=?`, Conn.UUID.String(), Conn.rooomId)
+	Conn.UserEmail = sessionsTool.GetUserLoginSession(r)
+	if len(Conn.UserEmail) < 0 {
+		http.Redirect(w, r, "/login", 301) //пересмотреть, на сокете редирект может не работать
+		return
+	}
+
+	currentSqlServer.Query(`EXEC [CreateConnection] @UUID=?, @RoomGUID=?, @Email=?`, Conn.UUID.String(), Conn.RoomGUID, Conn.UserEmail)
 	conns = append(conns, Conn)
 	println(conns)
 	println(URL)
 	for {
-		msgType, msg, err := Conn.conn.ReadMessage()
+		msgType, msg, err := Conn.Conn.ReadMessage()
 		//Добавить логику работы когда мы закрываем соединение, чтобы удалять ненужные
 		if err != nil {
 			return
 		}
+		xmlChanges := fmt.Sprintf(`<Change><AddVote vote="1" /></Change>`)
+		fmt.Println(string(msg))
+		fmt.Println(xmlChanges)
 
-		currentSqlServer.Exec("INSERT INTO ServerPlanningPoker.Connections(Id, [GUID], RoomId) VALUES(1, NEWID(), 1)")
+		outText := Change.GetChange(string(msg), &Conn)
+		fmt.Println(string(msg))
+		resultSP, err := currentSqlServer.Query(outText, xmlChanges, "add_vote", Conn.RoomGUID, Conn.UserEmail)
 		if err != nil {
-			fmt.Println(err)
-			return //Добавить реализацию логирования ошибок в базу
+			log.Println(err)
 		}
-		currentSqlServer.Exec("EXECUTE SaveError 'Error test'")
-		if err != nil {
-			fmt.Println(err)
-			return //Добавить реализацию логирования ошибок в базу
+		var resultCkeck string
+		for resultSP.Next() {
+			err := resultSP.Scan(&resultCkeck)
+			fmt.Println(resultCkeck)
+			if err != nil {
+				fmt.Println(err)
+				continue //Добавить реализацию логирования ошибок в базу
+			}
 		}
 
 		for _, value := range conns {
-			if value.rooomId == URL {
-				msg = []byte(URL)
-				value.conn.WriteMessage(msgType, msg)
+			if value.RoomGUID == URL {
+				msg = []byte(resultCkeck)
+				value.Conn.WriteMessage(msgType, msg)
 			}
 
 		}
