@@ -18,3 +18,7 @@
 		</Task>
 	</Tasks>
 </Room>
+
+
+<Room NameRoom="Meeting 01">
+<Persons><Person UserName="philomela" Id="1"/><Person UserName="roma01" Id="2"/></Persons><Tasks><Task Id="1" NameTask="Task 01" IsCurrentActive="0"><PersonTask PersonId="1" Vote="1" Score="1"/><PersonTask PersonId="49" Vote="1" Score="1"/></Task><Task Id="2" NameTask="Task 02" IsCurrentActive="0"><PersonTask PersonId="1" Vote="1" Score="1"/><PersonTask PersonId="49" Vote="1" Score="1"/></Task><Task Id="3" NameTask="Task 03" IsCurrentActive="0"><PersonTask PersonId="1" Vote="1" Score="1"/><PersonTask PersonId="49" Vote="1" Score="1"/></Task></Tasks></Room>

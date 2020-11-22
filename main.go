@@ -2,8 +2,10 @@ package main
 
 import (
 	RoomInteraction "ServerPlanningPoker/RoomInteraction"
-	ServerPlanningPoker "ServerPlanningPoker/ServerPlanningPoker"
+	ServerPlanningPoker "ServerPlanningPoker/ServerPlanningPokerSettings"
+	ServerPlanningPokerSettings "ServerPlanningPoker/ServerPlanningPokerSettings"
 	Sessions "ServerPlanningPoker/Sessions"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -14,6 +16,7 @@ import (
 	"net/smtp"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/go-redis/redis"
 	"github.com/google/uuid"
@@ -34,7 +37,7 @@ type connections []*websocket.Conn
 var client *redis.Client
 var sessionsTool = Sessions.InitSessionsTool()
 
-var currentServersSettings ServerPlanningPoker.ServersSettings
+var currentServersSettings ServerPlanningPokerSettings.ServersSettings
 var currentSqlServer *sql.DB
 var err error
 
@@ -48,18 +51,19 @@ const (
 )
 
 func main() {
-	r := mux.NewRouter()
-	r.HandleFunc("/rooms", roomsHandler).Methods("GET")
-	r.HandleFunc("/loginform", loginFormHandler).Methods("GET")
-	r.HandleFunc("/create-room", createRoomHandler).Methods("POST")
-	r.HandleFunc("/newroom", newRoomHandler).Methods("GET")
-	r.HandleFunc("/login", loginHandler).Methods("POST")
-	r.HandleFunc("/echo", echoSocket).Methods("GET")
-	r.HandleFunc("/room", roomHandler).Methods("GET")
-	r.HandleFunc("/registrationform", registrationFormHandler).Methods("GET")
-	r.HandleFunc("/registration", registrationHandler).Methods("POST")
-	r.HandleFunc("/", indexHandler).Methods("GET")
-	r.PathPrefix("/templates/").Handler(http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
+	//eventSthutdown := make(chan string)
+	router := mux.NewRouter()
+	router.HandleFunc("/rooms", roomsHandler).Methods("GET")
+	router.HandleFunc("/loginform", loginFormHandler).Methods("GET")
+	router.HandleFunc("/create-room", createRoomHandler).Methods("POST")
+	router.HandleFunc("/newroom", newRoomHandler).Methods("GET")
+	router.HandleFunc("/login", loginHandler).Methods("POST")
+	router.HandleFunc("/echo", echoSocket).Methods("GET")
+	router.HandleFunc("/room", roomHandler).Methods("GET")
+	router.HandleFunc("/registrationform", registrationFormHandler).Methods("GET")
+	router.HandleFunc("/registration", registrationHandler).Methods("POST")
+	router.HandleFunc("/", indexHandler).Methods("GET")
+	router.PathPrefix("/templates/").Handler(http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 
 	jsonFile, err := os.Open("./serversSettings.json")
 
@@ -77,9 +81,32 @@ func main() {
 
 	fmt.Println("Server succsesful configured. ©Roman Solovyev")
 
-	//http.Handle("/", r)
+	//APP_IP := os.Getenv("APP_IP")
+	//APP_PORT := os.Getenv("APP_PORT")
 
-	http.ListenAndServe(":80", r)
+	APP_IP := "localhost"
+	APP_PORT := "8080"
+	fmt.Println("Server started on:" + APP_IP + ":" + APP_PORT)
+	server := &http.Server{Addr: APP_IP + ":" + APP_PORT, Handler: router}
+
+	go func() {
+		server.ListenAndServe()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	var key string
+	for {
+		fmt.Println("To stop the server enter the command: stop")
+		_, err = fmt.Scan(&key)
+		if key == "stop" {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			server.Shutdown(ctx)
+			return
+		}
+	}
 
 }
 
@@ -277,13 +304,28 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		xmlChanges := fmt.Sprintf(`<Change><AddVote vote="1" /></Change>`)
-		fmt.Println(string(msg))
-		fmt.Println(xmlChanges)
+		msgConnection := string(msg)
+		msgConnArray := strings.Split(msgConnection, "==")
+		//msgConnValueArray := strings.Split(msgConnection, "==")
+		fmt.Println(msgConnArray)
+		var (
+			msgConnKey, msgConnValue string
+		)
+		if len(msgConnArray) == 2 {
+			msgConnKey = msgConnArray[0]
+			msgConnValue = msgConnArray[1]
+		} else if len(msgConnArray) == 1 {
+			msgConnKey = msgConnArray[0]
+		} else {
+			return //Рассмотреть детальнее обработку и филтрацию команд
+		}
 
-		outText := Change.GetChange(string(msg), &Conn)
-		fmt.Println(string(msg))
-		resultSP, err := currentSqlServer.Query(outText, xmlChanges, "add_vote", Conn.RoomGUID, Conn.UserEmail)
+		fmt.Println(string(msgConnKey))
+		fmt.Println(string(msgConnValue))
+
+		commandSql := Change.GetChange(msgConnKey, &Conn)
+		fmt.Println(commandSql)
+		resultSP, err := currentSqlServer.Query(commandSql, msgConnValue, msgConnKey, Conn.RoomGUID, Conn.UserEmail)
 		if err != nil {
 			log.Println(err)
 		}
@@ -304,8 +346,6 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 			}
 
 		}
-
-		//return
 	}
 }
 
