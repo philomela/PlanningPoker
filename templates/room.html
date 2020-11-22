@@ -107,37 +107,7 @@
         crossorigin="anonymous"></script>
 
     <script type="text/javascript">
-        let socketInst, currentXmlString, currentXml
-
-        currentXmlString = `<room>
-    <persons>
-        <person id="1" name="Roman"></person>
-        <person id="2" name="Andrew"></person>
-        <person id="3" name="Elena"></person>
-        <person id="4" name="Max"></person>
-    </persons>
-    
-    <meeting name="Meeting 01">
-        <task id="1" name="Task 01" currentActive="false">
-            <person id="1" vote="true" score="3"/>
-            <person id="2" vote="true" score="3"/>
-            <person id="3" vote="true" score="3"/>
-            <person id="4" vote="true" score="3"/>
-        </task>
-        <task id="2" name="Task 02" currentActive="true">
-            <person id="1" vote="false" score="0"/>
-            <person id="2" vote="false" score="0"/>
-            <person id="3" vote="false" score="0"/>
-            <person id="4" vote="false" score="0"/>
-        </task>
-        <task id="3" name="Task 03" currentActive="false">
-            <person id="1" vote="false" score="0"/>
-            <person id="2" vote="false" score="0"/>
-            <person id="3" vote="false" score="0"/>
-            <person id="4" vote="false" score="0"/>
-        </task>       
-    </meeting>
-</room>` //test
+        let socketInst, currentXmlString, currentXml;
 
         $.extend({
             getUrlVars: function () {
@@ -158,7 +128,7 @@
         function createWebSocket(queryParam) {
             socketInst = new WebSocket('ws://localhost:80/echo?roomId=' + $.getUrlVar('roomId'));
             socketInst.onopen = function (event) {
-
+                socketInst.send("ChangeGetVM")
 
             }
             socketInst.onmessage = function (event) {
@@ -169,12 +139,13 @@
         }
 
         function parseXmlResponse(currentXml) {
+            $('.right-menu-room ul, .name-meeting h1, .left-menu-room').empty();
             var parserXml = new DOMParser();
             currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
-            var persons = currentXml.getElementsByTagName('Room')[0].getElementsByTagName('Persons')[0].getElementsByTagName('Person')
+            var persons = currentXml.getElementsByTagName('Persons')[0].getElementsByTagName('Person')
             if (persons != null && persons != undefined)
                 for (var i = 0; i < persons.length; i++) {
-                    $(`<li>${persons[i].getAttribute('UserName')}</li>`).appendTo($('.right-menu-room ul'));
+                    $(`<li class="person${persons[i].getAttribute('Id')}">${persons[i].getAttribute('UserName')}</li>`).appendTo($('.right-menu-room ul'));
                 }
             var nameMeeting = currentXml.getElementsByTagName('Room')[0].getAttribute('NameRoom');
             if (nameMeeting != null & persons != undefined) {
@@ -187,12 +158,24 @@
                 for (var i = 0; i < tasks.length; i++) {
                     $(`<div class="task-room">${tasks[i].getAttribute('NameTask')}</div>`).appendTo($('.left-menu-room'));
                 }
-            }          
+            } 
+            var votes = currentXml.getElementsByTagName('Tasks')[0].getElementsByTagName('PersonTask');
+            if (votes != null && votes != undefined) {
+                console.log(votes)
+                for (var i = 0; i < votes.length; i++) {
+                    if (votes[i].getAttribute('Vote') != 0) {
+                        $(`.person${votes[i].getAttribute('PersonId')}`).css({"background": "red"})
+                        //alert('hello')
+                    }
+                    
+                }
+            } 
+
             console.log(persons);
         }
 
         $('button').click(() => {
-            socketInst.send("ChangeVote")
+            socketInst.send("ChangeVote==<Change><AddVote vote='1' /></Change>")
         });
         $('#blue').click(() => {
             SendColor('blue')
