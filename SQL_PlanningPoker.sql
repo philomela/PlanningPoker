@@ -262,31 +262,46 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                                         @roomGUID VARCHAR(36), 
                                         @email VARCHAR(50))
     AS
-        --BEGIN TRANSACTION 
-        --BEGIN TRY
-            IF @nameChanges = 'add_vote' 
-                BEGIN
-                DECLARE @Score INT, @RoomId INT, @PersonId INT, @TaskId INT, @xmlOut XML;
-                    SELECT @Score = C.value('@vote', 'INT')
-                           
-                           FROM @xmlChanges.nodes('/Change/AddVote') T(C);
-                           SET @RoomId = (SELECT Id FROM ServerPlanningPoker.Rooms WHERE GUID = @roomGUID);
-                           SET @PersonId = (SELECT Id FROM ServerPlanningPoker.Persons WHERE Email = email);
-                    SET @TaskId = (SELECT TOP(1) TaskId FROM ServerPlanningPoker.Votes 
+        BEGIN TRANSACTION 
+        BEGIN TRY
+            
+            DECLARE @xmlOut XML,
+                    @RoomId INT = (SELECT Id FROM ServerPlanningPoker.Rooms WHERE GUID = @roomGUID),
+                    @PersonId INT = (SELECT Id FROM ServerPlanningPoker.Persons WHERE Email = @email);
+                
+                IF @nameChanges = 'ChangeVote' 
+                    BEGIN
+                    DECLARE @Score INT, @TaskId INT;
+                        SELECT @Score = C.value('@vote', 'INT')                          
+                            FROM @xmlChanges.nodes('/Change/AddVote') T(C);
+                            
+                        SET @TaskId = (SELECT TOP(1) TaskId FROM ServerPlanningPoker.Votes 
                                                         WHERE RoomId = @RoomId AND PersonId = @PersonId AND Vote = 0 ORDER BY 1 ASC);
-                    UPDATE ServerPlanningPoker.Votes
-                    SET Score = @Score
-                    WHERE RoomId = @RoomId AND PersonId = @PersonId AND TaskId = @TaskId;
-                    EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT;
-                    SELECT @xmlOut; SELECT @Score, @RoomId, @PersonId, @TaskId;
-                END
-            --COMMIT;
-        --END TRY
+                        UPDATE ServerPlanningPoker.Votes
+                        SET Score = @Score, Vote = 1
+                        WHERE RoomId = @RoomId AND PersonId = @PersonId AND TaskId = @TaskId;
+                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT;
+                        SELECT @xmlOut;
+                    END
+                
+                ELSE IF @nameChanges = 'ChangeGetVM'
+                    BEGIN
+                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT;
+                        SELECT @xmlOut;
+                    END
+                --ELSE IF @nameChanges = 'calculate_median'
+                    --BEGIN  SELECT * FROM ServerPlanningPoker.Votes
 
-        --BEGIN CATCH
+                    --END
+                --ELSE IF @
+            
+                COMMIT;
+            END TRY
 
-            --ROLLBACK;
-        --END CATCH
+            BEGIN CATCH
+
+                ROLLBACK;
+            END CATCH
 GO
 
 
