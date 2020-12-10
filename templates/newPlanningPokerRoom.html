@@ -84,7 +84,7 @@
                 <div class="col-lg-8">
             <div class="form-group name-meeting-block">
                 <label for="name-meeting">Name meeting:</label>
-                <input type="text" class="form-control" id="name-meeting" name="name-meeting">  
+                <input type="text" class="form-control" id="name-meeting" name="name-meeting">
             </div>  
         </div>
     </div>   
@@ -101,7 +101,9 @@
                     
                         <div class="form-group tasks-controls">
                             <label for="task">Task:</label>
-                            <input type="text" class="form-control" id="task" name="task">                          
+                            <input type="text" class="form-control" id="task" name="task">
+                            <label for="time-discussion">Time for discussion:</label>
+                            <input type="time" class="form-control time-discuss" id="time-discussion" name="time-task">                            
                         </div>
                         
                    
@@ -161,7 +163,8 @@
         
 
         $('#add-new-task').click(() => {
-            $('.tasks-controls').append('<label for="task">Task:</label><input type="text" class="form-control" id="task" name="task">');
+            $('.tasks-controls').append(`<label for="task">Task:</label><input type="text" class="form-control" id="task" name="task">
+            <label for="time-discussion">Time for discussion:</label><input type="time" class="form-control time-discuss" id="time-discussion" name="time-task">`);
         });
 
         $('#push-tasks').click(() => {

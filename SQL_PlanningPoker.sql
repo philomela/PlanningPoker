@@ -41,7 +41,7 @@ CREATE TABLE ServerPlanningPoker.Rooms(
     Creator INT NOT NULL,
     [GUID] VARCHAR(36) UNIQUE
 )
-GO 
+GO SELECT * FROM ServerPlanningPoker.Rooms ORDER BY 1 DESC
 
 /*Таблица голосов и оценок задач*/
 CREATE TABLE ServerPlanningPoker.Votes(
@@ -225,7 +225,7 @@ CREATE PROCEDURE [Build_First_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
                                 (SELECT (ROW_NUMBER() OVER (ORDER BY T.Id ASC)) AS '@Id',
                                         T.Name AS '@NameTask',
                                         T.OnActive AS '@IsCurrentActive',
-                                        (SELECT V.PersonId AS '@PersonId',
+                                        (SELECT ROW_NUMBER() OVER (ORDER BY V.PersonId ASC) AS '@PersonId',
                                                 V.Vote AS '@Vote',
                                                 V.Score AS '@Score'
                                         FROM ServerPlanningPoker.Votes AS V 
@@ -255,6 +255,23 @@ CREATE PROCEDURE [CheckUser] (@email VARCHAR(100),
                 END
         SELECT @ResultCheck;
 GO
+
+/*Проверка создателя комнаты*/
+CREATE PROCEDURE [CheckCreator] (@email VARCHAR(100),
+                                @roomUID VARCHAR(36))
+    AS
+        IF (@email = (SELECT Email FROM ServerPlanningPoker.Persons 
+                                        WHERE Id = (SELECT Creator FROM ServerPlanningPoker.Rooms 
+                                                            WHERE GUID = @roomUID)))
+            BEGIN 
+                SELECT 'Creator';
+            END
+        ELSE 
+            BEGIN 
+                SELECT 'User'
+            END
+GO
+
 --EXEC Push_And_Get_Changes  '<Change><AddVote vote="1" /></Change>', 'add_vote', '58953a61-abb7-425e-9441-1ca92b97b6d1', 'romaphilomela@yandex.ru'
 /*Хранимая процедура сохраниения и получения xml ViewModel*/ --select * from ServerPlanningPoker.votes order by 1 desc
 CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML, 
@@ -364,3 +381,4 @@ DROP PROCEDURE Build_First_ViewModel
 
 
 SELECT RegExp() FROM ServerPlanningPoker.Rooms 
+SELECT * FROM ServerPlanningPoker.Persons ORDER BY 1 DESC
