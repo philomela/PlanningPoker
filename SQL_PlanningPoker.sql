@@ -86,7 +86,8 @@ GO
 /*Таблица задач*/
 CREATE TABLE ServerPlanningPoker.Tasks(
     Id INT PRIMARY KEY IDENTITY,
-    [Name] VARCHAR(MAX),
+    [Name] VARCHAR(MAX) NOT NULL,
+    TimeDiscussion TINYINT NOT NULL CHECK (TimeDiscussion > 0 AND TimeDiscussion <= 10),
     Created DATETIME2,
     OnActive BIT NOT NULL,
     RoomId INT REFERENCES ServerPlanningPoker.Rooms (Id) ON DELETE CASCADE
@@ -138,8 +139,9 @@ CREATE PROCEDURE [NewPlanningPokerRoom](@NameRoom VARCHAR(200),
 
                 SELECT TOP(1) @LastIdRoom = Id FROM ServerPlanningPoker.Rooms ORDER BY Id DESC;
  
-                        INSERT INTO ServerPlanningPoker.Tasks ([Name], Created, OnActive, RoomId)
+                        INSERT INTO ServerPlanningPoker.Tasks ([Name], [TimeDiscussion], Created, OnActive, RoomId)
                         SELECT C.value('@name', 'nvarchar(max)'),
+                               C.value('@time-discussion', 'tinyint'),
                                CURRENT_TIMESTAMP,
                                0,
                                @LastIdRoom
@@ -151,7 +153,7 @@ CREATE PROCEDURE [NewPlanningPokerRoom](@NameRoom VARCHAR(200),
                 ROLLBACK;
             END CATCH
 GO 
---SELECT * FROM ServerPlanningPoker.ViewModels
+--SELECT * FROM ServerPlanningPoker.Tasks
 /*Процедура создания и привязки коннекшенов к комнате*/
 CREATE PROCEDURE [CreateConnection](@UUID VARCHAR(36), 
                                     @RoomGUID VARCHAR(36),
@@ -335,10 +337,10 @@ SELECT * FROM ServerPlanningPoker.Persons
 DECLARE @ret VARCHAR(300);
 EXEC [NewPlanningPokerRoom] 'RoomTdsdsdest', '
 <tasks>
-    <task name="Task1"></task>
-    <task name="Task2"></task>
-    <task name="Task3"></task>
-</tasks>',
+    <task name="Task1" time-discussion="5"></task>
+    <task name="Task2" time-discussion="5"></task>
+    <task name="Task3" time-discussion="6"></task>
+</tasks>', 'ddfdf',
 @ret OUTPUT
 SELECT @ret
 
@@ -347,12 +349,14 @@ DROP PROCEDURE [NewPlanningPokerRoom]
 
 DECLARE @temp XML = '
 <tasks>
-    <task name="TaskGoOne"></task>
-    <task name="TaskGoTwo"></task>
-    <task name="TaskGoThree"></task>
+    <task name="TaskGoOne" time-discussion="5"></task>
+    <task name="TaskGoTwo" time-discussion="6"></task>
+    <task name="TaskGoThree" time-discussion="7"></task>
 </tasks>'
-SELECT C.value('@name', 'nvarchar(max)') FROM @temp.nodes('/tasks/task') T (C)
+SELECT C.value('@name', 'nvarchar(max)'), C.value('@time-discussion', 'tinyint') FROM @temp.nodes('/tasks/task') T (C)
 
+INSERT INTO ServerPlanningPoker.Rooms (NameRoom, Created, IsActive, Creator, [GUID]) VALUES ('room01', '2020-12-10', 1, 'Iam', 'huid')
+INSERT INTO ServerPlanningPoker.Tasks ([Name], [TimeDiscussion], Created, OnActive, RoomId) VALUES ('Hello', 5, '2020-12-10', 0, 1)
 
 SELECT * FROM ServerPlanningPoker.Tasks ORDER BY 1 DESC
 SELECT * FROM ServerPlanningPoker.Rooms ORDER BY 1 DESC

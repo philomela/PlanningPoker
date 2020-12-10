@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ru">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
@@ -10,8 +11,9 @@
         href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400;1,600;1,700;1,800&display=swap"
         rel="stylesheet">
     <title>Creating new room| Planning Poker</title>
-  </head>
-  <body>
+</head>
+
+<body>
     <header>
         <div class="container-fluid">
             <div class="row">
@@ -76,18 +78,18 @@
                 <div class="col-lg-12 text-center">
                     <h3 class="article-name-text-first">
                         First, name the meeting
-                    </h3>                             
+                    </h3>
                 </div>
             </div>
-            
+
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-            <div class="form-group name-meeting-block">
-                <label for="name-meeting">Name meeting:</label>
-                <input type="text" class="form-control" id="name-meeting" name="name-meeting">
-            </div>  
-        </div>
-    </div>   
+                    <div class="form-group name-meeting-block">
+                        <label for="name-meeting">Name meeting:</label>
+                        <input type="text" class="form-control" id="name-meeting" name="name-meeting">
+                    </div>
+                </div>
+            </div>
 
             <div class="row justify-content-center">
                 <div class="col-lg-12 text-center">
@@ -97,21 +99,31 @@
                 </div>
             </div>
             <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    
-                        <div class="form-group tasks-controls">
-                            <label for="task">Task:</label>
-                            <input type="text" class="form-control" id="task" name="task">
-                            <label for="time-discussion">Time for discussion:</label>
-                            <input type="time" class="form-control time-discuss" id="time-discussion" name="time-task">                            
-                        </div>
-                        
-                   
+                <div class="col-lg-6">
+
+                    <div class="form-group tasks-controls">
+                        <label for="task">Task:</label>
+                        <input type="text" class="form-control" id="task" name="task">
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    <div class="form-group task-timer">
+                        <label for="time-discussion">Time for discussion:</label>
+                        <input type="number" min="1" max="10" class="form-control time-discuss" id="time-discussion" name="time-task">
+                    </div>
+                </div>
+
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-left">
                     <button type="button" id="add-new-task" class="btn btn-primary">Add new task</button>
                     <button type="submit" id="push-tasks" class="btn btn-primary">Push tasks</button>
                 </div>
             </div>
+        </div>
 
+        <div class="container-fluid">
             <div class="row justify-content-center">
                 <div class="col-lg-12 text-center">
                     <h3 class="article-name-text-second">
@@ -121,50 +133,61 @@
             </div>
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-                    
-                        <div class="form-group link-room-block">
-                            <label for="task">Your link:</label>
-                            <input type="text" class="form-control" id="link-room" name="task">                          
-                        </div>
-                    
+
+                    <div class="form-group link-room-block">
+                        <label for="task">Your link:</label>
+                        <input type="text" class="form-control" id="link-room" name="task">
+                        <button type="button" id="change-location" class="btn btn-primary">Go to the room</button>
+                    </div>
+
                 </div>
             </div>
 
-
         </div>
+        
     </article>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"
-    integrity="sha512-2AL/VEauKkZqQU9BHgnv48OhXcJPx9vdzxN1JrKDVc4FPU/MEE/BZ6d9l0mP7VmvLsjtYwqiYQpDskK9dG8KBA=="
-    crossorigin="anonymous"></script>
-<script src="https://code.jquery.com/jquery-3.5.1.js"
-    integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-    crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
-    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
-    crossorigin="anonymous"></script> 
-    
+        integrity="sha512-2AL/VEauKkZqQU9BHgnv48OhXcJPx9vdzxN1JrKDVc4FPU/MEE/BZ6d9l0mP7VmvLsjtYwqiYQpDskK9dG8KBA=="
+        crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"
+        integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+
     <script type="text/javascript">
-        let xmlTasks, nameRoom;
-        function createXml(){
+        let xmlTasks, nameRoom, tasks = new Set();
+        function createXml() {
             _xmlForSend = '<tasks>'
             //tasksCollection = new Set();
-            tasksCollection = $('.tasks-controls').children('#task');   
-            for (let element of tasksCollection){
-                _xmlForSend += `<task name="${element.value}"/>`;
+            tasksCollection = $('.tasks-controls').children('#task');
+            timeCollection = $('.task-timer').children('#time-discussion');
+            for (var element of tasksCollection) {
+                tasks.add(`<task name="${element.value}" `);
+            }
+            console.log(tasks);
+            
+            for (var i = 0; i < timeCollection.length; i++) {
+                _xmlForSend += `${Array.from(tasks)[i]}time-discussion="${timeCollection[i].value}"/>`;
             }
             _xmlForSend += "</tasks>";
+            console.log(_xmlForSend);
             return _xmlForSend;
             console.log(_xmlForSend);
         }
 
-        
+        $('#change-location').click(() => {
+            //console.log($('#link-room').val());
+            location.href=$('#link-room').val();
+        });
 
         $('#add-new-task').click(() => {
-            $('.tasks-controls').append(`<label for="task">Task:</label><input type="text" class="form-control" id="task" name="task">
-            <label for="time-discussion">Time for discussion:</label><input type="time" class="form-control time-discuss" id="time-discussion" name="time-task">`);
+            $('.tasks-controls').append(`<label for="task">Task:</label><input type="text" class="form-control" id="task" name="task">`);
+            $('.task-timer').append(`<label for="time-discussion">Time for discussion:</label><input type="number" min="1" max="10" class="form-control time-discuss" id="time-discussion" name="time-task">`);
         });
 
         $('#push-tasks').click(() => {
@@ -172,16 +195,18 @@
             xmlTasks = createXml();
 
             $.ajax({
-            type: "POST",
-            url: "../create-room",
-            data: `nameRoom=${nameRoom}&xmlTasks=${xmlTasks}`,
-            success: function(msg){
-            $('#link-room').val(msg);
-            }});
+                type: "POST",
+                url: "../create-room",
+                data: `nameRoom=${nameRoom}&xmlTasks=${xmlTasks}`,
+                success: function (msg) {
+                    $('#link-room').val(msg);
+                }
+            });
         });
     </script>
 
 
 
 </body>
+
 </html>
