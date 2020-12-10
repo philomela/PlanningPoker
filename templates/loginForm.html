@@ -88,18 +88,17 @@
 
     <script type="text/javascript">
     $('#submit-log').click(() => {
-      loginUser = $('#login').val();
-      password = $('#password').val();
-      console.log(loginUser);
       $.ajax({
       type: "POST",
       url: "../login",
-      data: `loginUser=${loginUser}&password=${password}`,
+      data: `loginUser=${$('#login').val()}&password=${$('#password').val()}`,
       success: function(msg){
         if (msg != "Wrong") {
           window.location.href = msg;
         }
-      $('#warning').text("Invalid login/password");
+        else {
+          $('#warning').text("Invalid login/password");
+        }     
       }});
     });
     </script>
