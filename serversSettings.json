@@ -8,7 +8,14 @@
         "TypeSql": "mssql"
     },
     "ServerHost": {
-        "Host": "http://localhost/",
+        "Host": "http://localhost:8080/",
         "Room": "rooms?roomId="
+    },
+    "SmtpServer": {
+        "Host": "mail.hosting.reg.ru",
+        "LoginHost": "planningpoker@u0932131.plsk.regruhosting.ru",
+        "PassHost": "Rom@nkhik",
+        "PortHost": ":587"
     }
+    
 }

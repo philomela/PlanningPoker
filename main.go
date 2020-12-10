@@ -251,20 +251,46 @@ func newRoomHandler(w http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(w, nil)
 		return
 	}
-	return
 
 }
 
 /*Метод отображения приглашения входа в комнату*/
 func roomHandler(w http.ResponseWriter, r *http.Request) {
+	var creatorOrUser string
 	resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
+	userName := sessionsTool.GetUserLoginSession(r)
+	roomUID := r.URL.Query()["roomId"][0]
 
-	fmt.Println(resultCheckCookie)
+	resultSP, err := currentSqlServer.Query(`EXEC [CheckCreator] @email=?, @roomUID=?`, userName, roomUID)
+	if err != nil {
+		fmt.Println(err)
+	}
+	for resultSP.Next() {
+		err := resultSP.Scan(&creatorOrUser)
+		fmt.Println(creatorOrUser)
+		fmt.Println(roomUID)
+		if err != nil {
+			fmt.Println(err)
+			continue //Добавить реализацию логирования ошибок в базу
+		}
+	}
 
 	if resultCheckCookie {
-		tmpl, _ := template.ParseFiles("templates/room.html")
-		tmpl.Execute(w, nil)
-		return
+		if creatorOrUser == "Creator" {
+			dataFile, err := ioutil.ReadFile("templates/creatorTools.html")
+			if err != nil {
+				fmt.Println(err)
+			}
+			dataHtml := template.HTML(dataFile)
+
+			tmpl, _ := template.ParseFiles("templates/room.html")
+			tmpl.Execute(w, dataHtml)
+			return
+		} else {
+			tmpl, _ := template.ParseFiles("templates/room.html")
+			tmpl.Execute(w, nil)
+			return
+		}
 
 	} else {
 		tmpl, _ := template.ParseFiles("templates/loginForm.html")

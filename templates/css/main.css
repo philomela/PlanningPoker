@@ -97,3 +97,21 @@ footer {
     width: 100px;
     height: 300px;
 }
+
+.start-voting-btn {
+    background-color: #40AA29;
+    border-radius: 8px;
+    border: none;
+}
+
+.finish-voting-btn {
+    --width: 100px;
+    border-radius: 8px;
+    border: none;
+}
+
+.finish-planning-btn {
+    --width: 100px;
+    --border-radius: 8px;
+    border: none;
+}
