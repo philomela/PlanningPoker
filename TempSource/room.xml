@@ -4,15 +4,15 @@
 		<Person UserName="roma01" Id="2" />
 	</Persons>
 	<Tasks>
-		<Task Id="1" NameTask="Add banner on landing page" IsCurrentActive="0">
+		<Task Id="1" NameTask="Add banner on landing page" IsCurrentActive="0" Time="5">
 			<PersonTask PersonId="1" Vote="0" Score="0" />
 			<PersonTask PersonId="2" Vote="0" Score="0" />
 		</Task>
-		<Task Id="2" NameTask="Db optimization" IsCurrentActive="0">
+		<Task Id="2" NameTask="Db optimization" IsCurrentActive="0" Time="5">
 			<PersonTask PersonId="1" Vote="0" Score="0" />
 			<PersonTask PersonId="2" Vote="0" Score="0" />
 		</Task>
-		<Task Id="3" NameTask="Grooming plan" IsCurrentActive="0">
+		<Task Id="3" NameTask="Grooming plan" IsCurrentActive="0" Time="5">
 			<PersonTask PersonId="1" Vote="0" Score="0" />
 			<PersonTask PersonId="2" Vote="0" Score="0" />
 		</Task>

@@ -16,3 +16,6 @@
 
 #Db-files
 *.DS_Store
+
+#Image files
+*.psd
