@@ -91,6 +91,13 @@ footer {
     border: 1px solid black;
     border-radius: 10px;
     margin-bottom: 5px;
+    display: inline-block;
+    width: 80%;
+}
+
+.time-task-discussion {
+    display: inline-block;
+    width: 20%;
 }
 
 .button-room {
