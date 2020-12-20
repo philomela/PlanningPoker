@@ -158,7 +158,8 @@
             if (tasks != null && tasks != undefined) {
                 console.log(tasks)
                 for (var i = 0; i < tasks.length; i++) {
-                    $(`<div class="task-room">${tasks[i].getAttribute('NameTask')}</div><div class="time-task-discussion">${tasks[i].getAttribute('TimeDiscussion')} :min</div>`).appendTo($('.tasks-left-menu-room'));
+                    $(`<div class="task-room is-current-active-${tasks[i].getAttribute('IsCurrentActive')}">${tasks[i].getAttribute('NameTask')}</div><div class="time-task-discussion">
+                        ${tasks[i].getAttribute('TimeDiscussion')} :min</div>`).appendTo($('.tasks-left-menu-room'));
                 }
             } 
             var votes = currentXml.getElementsByTagName('Tasks')[0].getElementsByTagName('PersonTask');
@@ -176,11 +177,15 @@
             console.log(persons);
         }
 
-        $('button').click(() => {
+        function GetChosenTask() {
+            
+        }
+
+        $('.button-room').click(() => {
             socketInst.send("ChangeVote==<Change><AddVote vote='1' /></Change>")
         });
-        $('#blue').click(() => {
-            SendColor('blue')
+        $('#start-voting').click(() => {
+            socketInst.send("ChangeStartTask==<Change><StartCurrentTask Id='1' /></Change>")
         });
         $('#yellow').click(() => {
             SendColor('yellow')

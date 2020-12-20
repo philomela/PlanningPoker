@@ -300,6 +300,17 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+type PreHandlerWebSocket struct {
+	Map []string
+}
+
+func checkAuth(nextHandler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		nextHandler(w, r)
+	}
+}
+
 /*Метод upgare запроса до протокола WebSocket*/
 func echoSocket(w http.ResponseWriter, r *http.Request) {
 	var (
