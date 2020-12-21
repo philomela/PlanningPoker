@@ -254,6 +254,11 @@ func newRoomHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type RoomPatternHtml struct {
+	CreatorTools   template.HTML
+	CreatorScripts template.HTML
+}
+
 /*Метод отображения приглашения входа в комнату*/
 func roomHandler(w http.ResponseWriter, r *http.Request) {
 	var creatorOrUser string
@@ -277,14 +282,18 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 
 	if resultCheckCookie {
 		if creatorOrUser == "Creator" {
-			dataFile, err := ioutil.ReadFile("templates/creatorTools.html")
+			creatorToolsDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorTools.html")
 			if err != nil {
 				fmt.Println(err)
 			}
-			dataHtml := template.HTML(dataFile)
+			creatorScriptsDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorRoomScripts.html")
+			roomPatterns := RoomPatternHtml{
+				CreatorTools:   template.HTML(creatorToolsDataFile),
+				CreatorScripts: template.HTML(creatorScriptsDataFile),
+			}
 
 			tmpl, _ := template.ParseFiles("templates/room.html")
-			tmpl.Execute(w, dataHtml)
+			tmpl.Execute(w, roomPatterns)
 			return
 		} else {
 			tmpl, _ := template.ParseFiles("templates/room.html")
@@ -300,13 +309,9 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-type PreHandlerWebSocket struct {
-	Map []string
-}
-
 func checkAuth(nextHandler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		//Middleware для аутентификации, вынести логику аутентификации сюда.
 		nextHandler(w, r)
 	}
 }
@@ -362,6 +367,7 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 
 		commandSql := Change.GetChange(msgConnKey, &Conn)
 		fmt.Println(commandSql)
+
 		resultSP, err := currentSqlServer.Query(commandSql, msgConnValue, msgConnKey, Conn.RoomGUID, Conn.UserEmail)
 		if err != nil {
 			log.Println(err)

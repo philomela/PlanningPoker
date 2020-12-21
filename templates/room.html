@@ -70,7 +70,7 @@
             </div>
             <div class="col-lg-4 text-center justify-content-left left-menu-room">
                 <div class="tasks-left-menu-room"></div>
-                <div class="creator-tools">{{ .}}</div>
+                <div class="creator-tools">{{ .CreatorTools}}</div>
             </div>
             <div class="col-lg-6 text-center main-room">
                 <button class="button-room"><img src="/templates/img/voice-1.png" alt="" width="100"></button>
@@ -108,6 +108,8 @@
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
         crossorigin="anonymous"></script>
 
+        {{ .CreatorScripts}} <!-- Подключение скриптов js создателя-->
+
     <script type="text/javascript">
         let socketInst, currentXmlString, currentXml;
 
@@ -135,9 +137,18 @@
             }
             socketInst.onmessage = function (event) {
                 currentXmlString = event.data;
+                switch (currentXmlString) {
+                    case "StartTask": 
+                    setInterval(startTimeTask($('.is-current-active-1').next()), 100);
+                }
+                
                 parseXmlResponse(currentXml);
                 //alert(currentXmlString);
             }
+        }
+
+        function startTimeTask(timerElement){
+            timerElement.text = timerElement.text - 1;
         }
 
         function parseXmlResponse(currentXml) {
@@ -184,9 +195,7 @@
         $('.button-room').click(() => {
             socketInst.send("ChangeVote==<Change><AddVote vote='1' /></Change>")
         });
-        $('#start-voting').click(() => {
-            socketInst.send("ChangeStartTask==<Change><StartCurrentTask Id='1' /></Change>")
-        });
+        
         $('#yellow').click(() => {
             SendColor('yellow')
         });
