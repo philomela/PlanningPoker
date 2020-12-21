@@ -227,6 +227,7 @@ CREATE PROCEDURE [Build_First_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
                                 (SELECT (ROW_NUMBER() OVER (ORDER BY T.Id ASC)) AS '@Id',
                                         T.Name AS '@NameTask',
                                         T.OnActive AS '@IsCurrentActive',
+                                        T.TimeDiscussion AS '@TimeDiscussion',
                                         (SELECT ROW_NUMBER() OVER (ORDER BY V.PersonId ASC) AS '@PersonId',
                                                 V.Vote AS '@Vote',
                                                 V.Score AS '@Score'
@@ -305,9 +306,17 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                 
                 ELSE IF @nameChanges = 'ChangeGetVM'
                     BEGIN
-                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT;
+                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
                     END
+
+                ELSE IF @nameChanges = 'ChangeStartTask'
+                    BEGIN
+                        DECLARE @TaskId = (SELECT ROW_NUMBER() OVER (PARTITION BY RoomId ORDER BY Id ASC) AS IdTask
+                                                ,Name
+                                                ,Id AS OldId
+                                            FROM ServerPlanningPoker.Tasks WHERE RoomId = @RoomId;
+                    END 
                 --ELSE IF @nameChanges = 'calculate_median'
                     --BEGIN  SELECT * FROM ServerPlanningPoker.Votes
 
@@ -355,14 +364,15 @@ DECLARE @temp XML = '
 </tasks>'
 SELECT C.value('@name', 'nvarchar(max)'), C.value('@time-discussion', 'tinyint') FROM @temp.nodes('/tasks/task') T (C)
 
-INSERT INTO ServerPlanningPoker.Rooms (NameRoom, Created, IsActive, Creator, [GUID]) VALUES ('room01', '2020-12-10', 1, 'Iam', 'huid')
-INSERT INTO ServerPlanningPoker.Tasks ([Name], [TimeDiscussion], Created, OnActive, RoomId) VALUES ('Hello', 5, '2020-12-10', 0, 1)
+INSERT INTO ServerPlanningPoker.Rooms (NameRoom, Created, IsActive, Creator, [GUID]) VALUES ('room01', '2020-12-10', 1, 0, 'huid')
+INSERT INTO ServerPlanningPoker.Tasks ([Name], [TimeDiscussion], Created, OnActive, RoomId) VALUES ('Hello', 5, '2020-12-10', 0, 6)
 
 SELECT * FROM ServerPlanningPoker.Tasks ORDER BY 1 DESC
 SELECT * FROM ServerPlanningPoker.Rooms ORDER BY 1 DESC
 SELECT * FROM ServerPlanningPoker.ErrorsLog_Server 
 SELECT * FROM ServerPlanningPoker.Connections
 SELECT * FROM ServerPlanningPoker.ViewModels
+SELECT * FROM ServerPlanningPoker.Persons
 
 
 
@@ -386,3 +396,20 @@ DROP PROCEDURE Build_First_ViewModel
 
 SELECT RegExp() FROM ServerPlanningPoker.Rooms 
 SELECT * FROM ServerPlanningPoker.Persons ORDER BY 1 DESC
+
+
+
+
+CREATE TABLE TestTable_01 (
+    id INT PRIMARY KEY IDENTITY,
+    surname VARCHAR(100) NULL,
+    [name] VARCHAR(100) NULL,
+    number_flight CHAR(10) NULL
+)
+
+INSERT INTO TestTable_01 ([name], surname, number_flight) VALUES ('Soloviev', 'Roman', 'A')
+
+INSERT INTO TestTable_01 VALUE ()
+
+SELECT * FROM TestTable_01
+
