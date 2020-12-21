@@ -26,6 +26,7 @@ func NewChangesViewModel() *ChangesViewModel {
 	}
 	ChangesViewModelOut.Changes["ChangeVote"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
 	ChangesViewModelOut.Changes["ChangeGetVM"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+
 	return &ChangesViewModelOut
 }
 
