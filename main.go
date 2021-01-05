@@ -192,6 +192,8 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(resultSP)
 	fmt.Println(hello)
 	fmt.Println(roomId)
+	fmt.Println(hello)
+	fmt.Println(hello)
 }
 
 /*Метод входа пользователей*/
@@ -347,6 +349,7 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		msgConnection := string(msg)
+
 		msgConnArray := strings.Split(msgConnection, "==")
 		//msgConnValueArray := strings.Split(msgConnection, "==")
 		fmt.Println(msgConnArray)
@@ -365,7 +368,7 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(string(msgConnKey))
 		fmt.Println(string(msgConnValue))
 
-		commandSql := Change.GetChange(msgConnKey, &Conn)
+		commandSql := Change.GetChange(msgConnKey)
 		fmt.Println(commandSql)
 
 		resultSP, err := currentSqlServer.Query(commandSql, msgConnValue, msgConnKey, Conn.RoomGUID, Conn.UserEmail)
