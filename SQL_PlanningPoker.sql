@@ -295,15 +295,20 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                 
                 IF @nameChanges = 'ChangeVote' 
                     BEGIN
-                    DECLARE @Score INT;
-                        SELECT @Score = C.value('@vote', 'INT')                          
+                        DECLARE @Score INT, @Vote INT;
+                    
+                        SELECT @Score = C.value('@score', 'INT')
+                                ,@Vote = C.value('@vote', 'INT')                     
                             FROM @xmlChanges.nodes('/Change/AddVote') T(C);
-                            
-                        SET @TaskId = (SELECT TOP(1) TaskId FROM ServerPlanningPoker.Votes 
-                                                        WHERE RoomId = @RoomId AND PersonId = @PersonId AND Vote = 0 ORDER BY 1 ASC);
+
+                        SET @TaskId = (SELECT Id 
+                                            FROM ServerPlanningPoker.Tasks 
+                                                WHERE RoomId = @RoomId AND OnActive = 1)
+
                         UPDATE ServerPlanningPoker.Votes
                         SET Score = @Score, Vote = 1
                         WHERE RoomId = @RoomId AND PersonId = @PersonId AND TaskId = @TaskId;
+                        
                         EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT;
                         SELECT @xmlOut;
                     END
