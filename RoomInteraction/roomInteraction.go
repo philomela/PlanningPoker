@@ -13,7 +13,7 @@ type Connection struct {
 }
 
 type Change interface {
-	GetChange(nameEvent string, conn *Connection) (commandOnChange string)
+	GetChange(nameEvent string) (commandOnChange string)
 }
 
 type ChangesViewModel struct {
@@ -26,11 +26,12 @@ func NewChangesViewModel() *ChangesViewModel {
 	}
 	ChangesViewModelOut.Changes["ChangeVote"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
 	ChangesViewModelOut.Changes["ChangeGetVM"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
-
+	ChangesViewModelOut.Changes["StartVoting"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+	ChangesViewModelOut.Changes["StopVoting"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
 	return &ChangesViewModelOut
 }
 
-func (c *ChangesViewModel) GetChange(nameEvent string, conn *Connection) (commandOnChange string) {
+func (c *ChangesViewModel) GetChange(nameEvent string) (commandOnChange string) {
 	commandOnChange = c.Changes[nameEvent]
 	return
 }

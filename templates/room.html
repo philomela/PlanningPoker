@@ -73,11 +73,12 @@
                 <div class="creator-tools">{{ .CreatorTools}}</div>
             </div>
             <div class="col-lg-6 text-center main-room">
-                <button class="button-room"><img src="/templates/img/voice-1.png" alt="" width="100"></button>
-                <button class="button-room"><img src="/templates/img/voice-2.png" alt="" width="100"></button>
-                <button class="button-room"><img src="/templates/img/voice-3.png" alt="" width="100"></button>
-                <button class="button-room"><img src="/templates/img/voice-4.png" alt="" width="100"></button>
-                <button class="button-room"><img src="/templates/img/voice-5.png" alt="" width="100"></button>
+                <!-- <canvas id="canv"></canvas> -->
+                <button id="btn-1" class="button-room"><img src="/templates/img/voice-1.png" alt="" width="100"></button>
+                <button id="btn-2" class="button-room"><img src="/templates/img/voice-2.png" alt="" width="100"></button>
+                <button id="btn-3" class="button-room"><img src="/templates/img/voice-3.png" alt="" width="100"></button>
+                <button id="btn-4" class="button-room"><img src="/templates/img/voice-4.png" alt="" width="100"></button>
+                <button id="btn-5" class="button-room"><img src="/templates/img/voice-5.png" alt="" width="100"></button>
             </div>
             <div class="col-lg-2 text-center right-menu-room">
                 <h3 class="text-center">Party:</h3>
@@ -87,12 +88,6 @@
             </div>
         </div>
         <div class="row justify-content-center">
-            <div class="col-lg-12">
-
-
-
-
-            </div>
         </div>
     </div>
 
@@ -108,108 +103,10 @@
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
         crossorigin="anonymous"></script>
 
-        {{ .CreatorScripts}} <!-- Подключение скриптов js создателя-->
-
-    <script type="text/javascript">
-        let socketInst, currentXmlString, currentXml;
-
-        $.extend({
-            getUrlVars: function () {
-                var vars = [], hash;
-                var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
-                for (var i = 0; i < hashes.length; i++) {
-                    hash = hashes[i].split('=');
-                    vars.push(hash[0]);
-                    vars[hash[0]] = hash[1];
-                }
-                return vars;
-            },
-            getUrlVar: function (name) {
-                return $.getUrlVars()[name];
-            }
-        });
-
-        function createWebSocket(queryParam) {
-            socketInst = new WebSocket('ws://localhost:8080/echo?roomId=' + $.getUrlVar('roomId'));
-            socketInst.onopen = function (event) {
-                socketInst.send("ChangeGetVM")
-
-            }
-            socketInst.onmessage = function (event) {
-                currentXmlString = event.data;
-                switch (currentXmlString) {
-                    case "StartTask": 
-                    setInterval(startTimeTask($('.is-current-active-1').next()), 100);
-                }
-                
-                parseXmlResponse(currentXml);
-                //alert(currentXmlString);
-            }
-        }
-
-        function startTimeTask(timerElement){
-            timerElement.text = timerElement.text - 1;
-        }
-
-        function parseXmlResponse(currentXml) {
-            $('.right-menu-room ul, .name-meeting h1, .tasks-left-menu-room').empty();
-            var parserXml = new DOMParser();
-            currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
-            var persons = currentXml.getElementsByTagName('Persons')[0].getElementsByTagName('Person')
-            if (persons != null && persons != undefined)
-                for (var i = 0; i < persons.length; i++) {
-                    $(`<li class="person${persons[i].getAttribute('Id')}">${persons[i].getAttribute('UserName')}</li>`).appendTo($('.right-menu-room ul'));
-                }
-            var nameMeeting = currentXml.getElementsByTagName('Room')[0].getAttribute('NameRoom');
-            if (nameMeeting != null & persons != undefined) {
-                console.log(nameMeeting)
-                $('.name-meeting h1').text(nameMeeting);
-            }
-            var tasks = currentXml.getElementsByTagName('Tasks')[0].getElementsByTagName('Task')
-            if (tasks != null && tasks != undefined) {
-                console.log(tasks)
-                for (var i = 0; i < tasks.length; i++) {
-                    $(`<div class="task-room is-current-active-${tasks[i].getAttribute('IsCurrentActive')}">${tasks[i].getAttribute('NameTask')}</div><div class="time-task-discussion">
-                        ${tasks[i].getAttribute('TimeDiscussion')} :min</div>`).appendTo($('.tasks-left-menu-room'));
-                }
-            } 
-            var votes = currentXml.getElementsByTagName('Tasks')[0].getElementsByTagName('PersonTask');
-            if (votes != null && votes != undefined) {
-                console.log(votes)
-                for (var i = 0; i < votes.length; i++) {
-                    if (votes[i].getAttribute('Vote') != 0) {
-                        $(`.person${votes[i].getAttribute('PersonId')}`).css({"background": "red"})
-                        //alert('hello')
-                    }
-                    
-                }
-            } 
-
-            console.log(persons);
-        }
-
-        function GetChosenTask() {
-            
-        }
-
-        $('.button-room').click(() => {
-            socketInst.send("ChangeVote==<Change><AddVote vote='1' /></Change>")
-        });
         
-        $('#yellow').click(() => {
-            SendColor('yellow')
-        });
-        $('#green').click(() => {
-            SendColor('green')
-        });
-
-        var roomId = $("input[name='roomId']").val()
-        createWebSocket(roomId);
-
-
-        parseXmlResponse(currentXml); //test
-    </script>
-
+        <script src="templates/js/main.js"></script>
+        {{ .CreatorScripts}} <!-- Подключение скриптов js создателя-->
+       
 
 </body>
 
