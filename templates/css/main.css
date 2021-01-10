@@ -68,6 +68,12 @@ footer {
     border-right: 1px solid black;
     height: 500px;
 }
+
+canvas {
+    height: 320px;
+    width: 480px;
+}
+
 .left-menu-room {
     --background-color: bisque;
     height: 500px;
@@ -92,12 +98,25 @@ footer {
     border-radius: 10px;
     margin-bottom: 5px;
     display: inline-block;
-    width: 80%;
+    width: 100%;
+}
+
+.is-current-active-1 {
+    background-color: #40AA29;
+}
+
+.is-current-active-0 {
+    
 }
 
 .time-task-discussion {
     display: inline-block;
     width: 20%;
+}
+
+.current-median {
+    display: inline-block;
+    width: 80%;
 }
 
 .button-room {
