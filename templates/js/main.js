@@ -89,8 +89,6 @@ function parseXmlResponse(currentXml) {
                     $(`.person${currentPersonTasks[k].getAttribute('PersonId')}`).css({ "background": "red" })
                 }
             }
-
-
         }
     }
     console.log(persons);

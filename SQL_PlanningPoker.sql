@@ -95,6 +95,15 @@ CREATE TABLE ServerPlanningPoker.Votes(
 )
 GO
 
+CREATE TABLE ServerPlanningPoker.TasksResults(
+    Id INT PRIMARY KEY IDENTITY,
+    Median TINYINT NOT NULL,
+    DateCreated DATETIME2 NOT NULL,
+    TaskId INT UNIQUE NOT NULL REFERENCES ServerPlanningPoker.Tasks (Id),
+    RoomId INT NOT NULL REFERENCES ServerPlanningPoker.Rooms (Id) ON DELETE CASCADE
+)
+GO
+
 /*Процедура добавление нового пользователя*/
 CREATE PROCEDURE [Add_User](@LoginName VARCHAR(50), 
                             @Email VARCHAR(100), 
@@ -345,6 +354,25 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                             SET OnActive = 0, Completed = 1
                                 WHERE RoomId = @RoomId AND OnActive = 1;
                         
+                        INSERT INTO ServerPlanningPoker.TasksResults(Median, DateCreated, TaskId, RoomId)
+                        VALUES (SELECT TOP(1) PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY Score)
+                                                            OVER (PARTITION BY RoomId) AS Median
+                                    FROM ServerPlanningPoker.Votes 
+                                        WHERE TaskId = (SELECT TOP(1) Id 
+                                                            FROM ServerPlanningPoker.Tasks 
+                                                                WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC)
+                                ,CURRENT_TIMESTAMP
+                                ,SELECT TOP(1) Id 
+                                    FROM ServerPlanningPoker.Tasks
+                                        WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC 
+                                ,
+                                )
+                        
+
+                        SELECT * FROM ServerPlanningPoker.Rooms WHERE Id = 16
+                        SELECT * FROM ServerPlanningPoker.Tasks WHERE RoomId = 16
+                        SELECT * FROM ServerPlanningPoker.Votes WHERE RoomId = 16 AND TaskId = 18
+
                         EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
                     END
@@ -356,6 +384,8 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                 ROLLBACK;
             END CATCH
 GO
+
+SELECT * FROM ServerPlanningPoker.Votes ORDER BY RoomId DESC
 
 SELECT 
 INSERT INTO ServerPlanningPoker.Persons(LoginName, Email, [Password], Token) 
