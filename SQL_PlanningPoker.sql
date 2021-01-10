@@ -97,7 +97,7 @@ GO
 
 CREATE TABLE ServerPlanningPoker.TasksResults(
     Id INT PRIMARY KEY IDENTITY,
-    Median FLOAT NOT NULL,
+    Median DECIMAL(9,2) NOT NULL,
     DateCreated DATETIME2 NOT NULL,
     TaskId INT UNIQUE NOT NULL REFERENCES ServerPlanningPoker.Tasks (Id),
     RoomId INT NOT NULL REFERENCES ServerPlanningPoker.Rooms (Id) ON DELETE CASCADE
@@ -240,6 +240,9 @@ CREATE PROCEDURE [Build_First_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
                                         T.Name AS '@NameTask',
                                         T.OnActive AS '@IsCurrentActive',
                                         T.TimeDiscussion AS '@TimeDiscussion',
+                                        (SELECT Median
+                                        FROM ServerPlanningPoker.TasksResults
+                                        WHERE RoomId = @RoomId AND TaskId = T.Id) AS '@Median',
                                         (SELECT ROW_NUMBER() OVER (ORDER BY V.PersonId ASC) AS '@PersonId',
                                                 V.Vote AS '@Vote',
                                                 V.Score AS '@Score'
@@ -382,6 +385,7 @@ GO
 
 SELECT * FROM ServerPlanningPoker.Votes ORDER BY RoomId DESC
 SELECT * FROM ServerPlanningPoker.TasksResults ORDER BY 1 DESC
+DELETE FROM ServerPlanningPoker.TasksResults
 
 SELECT 
 INSERT INTO ServerPlanningPoker.Persons(LoginName, Email, [Password], Token) 
@@ -437,6 +441,7 @@ DROP TABLE ServerPlanningPoker.Connections
 DROP TABLE ServerPlanningPoker.ViewModels
 DROP TABLE ServerPlanningPoker.Persons
 DROP TABLE ServerPlanningPoker.Sessions
+DROP TABLE ServerPlanningPoker.TasksResults
 DROP PROCEDURE u0932131_admin.NewPlanningPokerRoom
 DROP PROCEDURE u0932131_admin.Add_User
 DROP PROCEDURE u0932131_admin.CreateConnection
