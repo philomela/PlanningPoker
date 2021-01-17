@@ -1,2 +1,3 @@
-# ServerPlaningPoker
-This repo is project server part for common project PlanningPoker
+# PlanningPoker.ru
+This repo is site project PlanningPoker.ru
+PlanningPoker - game for evaluating scrum team tasks
