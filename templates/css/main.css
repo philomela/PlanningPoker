@@ -1,0 +1,143 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: #f8f9fa;
+}
+header {
+    
+}
+main {
+    background: url('/templates/img/igralnye-kosti.png');
+    background-size: cover;
+    
+    background-color: #48173e;
+    
+}
+.main-slide {
+    height: 350px;
+}
+.left-main-block {
+    color: #FCF8FF;
+}
+.right-main-block {
+    color: #FCF8FF;
+}
+.controls-block {
+    --height: 200px;
+}
+.create-room {
+    background-color: #40AA29;
+    color: white;
+    --width: 300px;
+}
+article {
+    --height: 400px;
+}
+.left-article-block  {
+    
+}
+.right-article-block {
+
+}
+.article-img {
+    --display: inline-block;
+}
+footer {
+    background-color: yellow;
+}
+.footer-block {
+    background-color: aqua;
+}
+.btn-primary {
+    background: #f8f9fa;
+    color: #40AA29;
+    border: 1px solid #40AA29;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
+    color: #f8f9fa;
+    background: #40AA29;
+    border: 1px solid #40AA29;
+}
+
+#warning {
+    color: red;
+}
+
+.main-room {
+    --background-color: bisque;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+    height: 500px;
+}
+
+canvas {
+    height: 320px;
+    width: 480px;
+}
+
+.left-menu-room {
+    --background-color: bisque;
+    height: 500px;
+}
+
+.right-menu-room {
+    --background-color: blue;
+    list-style-type: none;
+    height: 500px;
+}
+.right-menu-room ul {
+    padding: 0;
+}
+
+.right-menu-room li {
+    list-style-type: none;
+    padding: 0;
+}
+
+.task-room {
+    border: 1px solid black;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    display: inline-block;
+    width: 100%;
+}
+
+.is-current-active-1 {
+    background-color: #40AA29;
+}
+
+.is-current-active-0 {
+    
+}
+
+.time-task-discussion {
+    display: inline-block;
+    width: 20%;
+}
+
+.current-median {
+    display: inline-block;
+    width: 80%;
+}
+
+.button-room {
+    width: 100px;
+    height: 300px;
+}
+
+.start-voting-btn {
+    background-color: #40AA29;
+    border-radius: 8px;
+    border: none;
+}
+
+.finish-voting-btn {
+    --width: 100px;
+    border-radius: 8px;
+    border: none;
+}
+
+.finish-planning-btn {
+    --width: 100px;
+    --border-radius: 8px;
+    border: none;
+}

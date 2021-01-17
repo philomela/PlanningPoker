@@ -1,0 +1,21 @@
+{
+    "ServerPlanningPoker": {
+        "ProtocolServer": "tcp",
+        "Port": ":4545"
+    },
+    "SQLServer": {
+        "DSN": "server=31.31.196.202;user id=u0932131_admin;password=RomanAndrey46;database=u0932131_planningPoker",
+        "TypeSql": "mssql"
+    },
+    "ServerHost": {
+        "Host": "http://localhost:8080/",
+        "Room": "rooms?roomId="
+    },
+    "SmtpServer": {
+        "Host": "mail.hosting.reg.ru",
+        "LoginHost": "planningpoker@u0932131.plsk.regruhosting.ru",
+        "PassHost": "Rom@nkhik",
+        "PortHost": ":587"
+    }
+    
+}
