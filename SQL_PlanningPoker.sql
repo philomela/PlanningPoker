@@ -470,3 +470,5 @@ INSERT INTO TestTable_01 VALUE ()
 SELECT * FROM TestTable_01
 
 DELETE FROM ServerPlanningPoker.Persons
+
+

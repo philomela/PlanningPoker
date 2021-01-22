@@ -1,5 +1,6 @@
 var startVotingData;
 $('#start-voting').click(() => {
+
     socketInst.send(`StartVoting==${startVotingData}`)
     console.log(startVotingData)
 });
@@ -12,4 +13,5 @@ $(document).on('click', '.task-room', (e) => {
 
 $('#finish-voting').click(() => {
     socketInst.send(`StopVoting==`)
+    timerStarted = 0;
 })

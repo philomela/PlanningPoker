@@ -69,13 +69,32 @@ footer {
     height: 500px;
 }
 
-canvas {
-    height: 320px;
-    width: 480px;
+.name-room {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.results-voting, tr, td {
+    font-size: 14px; 
+}
+
+tr, td {
+    border: 1px solid black;
+}
+
+.name-right-menu {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.name-left-menu, .name-results-menu, .name-right-menu {
+    font-size: 16px;
+    font-weight: bold;
 }
 
 .left-menu-room {
     --background-color: bisque;
+    font-size: 14px;
     height: 500px;
 }
 
@@ -89,16 +108,17 @@ canvas {
 }
 
 .right-menu-room li {
+    font-size: 14px;
     list-style-type: none;
     padding: 0;
 }
 
 .task-room {
-    border: 1px solid black;
+    --border: 1px solid black;
     border-radius: 10px;
     margin-bottom: 5px;
     display: inline-block;
-    width: 100%;
+    width: 80%;
 }
 
 .is-current-active-1 {
@@ -120,8 +140,11 @@ canvas {
 }
 
 .button-room {
-    width: 100px;
-    height: 300px;
+    --width: 100px;
+    --height: 300px;
+    background-color: white;
+    border-radius: 10px;
+    border: 1px solid black;
 }
 
 .start-voting-btn {

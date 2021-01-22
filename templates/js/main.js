@@ -84,33 +84,35 @@ function parseXmlResponse(currentXml) {
             }
             $(`<div id="task-${tasks[i].getAttribute('Id')}" class="task-room is-current-active-${tasks[i].getAttribute('IsCurrentActive')}">${tasks[i].getAttribute('NameTask')}</div><div class="time-task-discussion">
                         ${tasks[i].getAttribute('TimeDiscussion')} :min</div>`).appendTo($('.tasks-left-menu-room'));
-            
+
             $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}"><td id="tb-name-task">${tasks[i].getAttribute('NameTask')}</tr>`).appendTo($('#tb-results'));
-            
+
             var currPersonTasks = tasks[i].getElementsByTagName('PersonTask');
-            
-            for(let i = 0; i < currPersonTasks.length; i++){
+
+            for (let i = 0; i < currPersonTasks.length; i++) {
                 var currentPersonId = currPersonTasks[i].getAttribute('PersonId');
-                for(let k = 0; k < persons.length; k++){
-                    if (persons[k].getAttribute('Id') == currentPersonId){
+                for (let k = 0; k < persons.length; k++) {
+                    if (persons[k].getAttribute('Id') == currentPersonId) {
                         $(`<td id="tsk-tb-person-${currentPersonId}">${persons[k].getAttribute('UserName')}</td>`).appendTo($('#tb-results').children().last());
-                        
+
                     }
                 }
             }
-            $(`<td id="tsk-tb-median">Median:</td>`).appendTo($('#tb-results').children().last());
-            $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}"><td id="tb-name-task"></tr>`).appendTo($('#tb-results'));
-            for(let j = 0; j < currPersonTasks.length; j++){
-                var currentPersonId = currPersonTasks[j].getAttribute('PersonId');
-                for(let l = 0; l < persons.length; l++){
-                    if (persons[l].getAttribute('Id') == currentPersonId){
-                        $(`<td id="tsk-tb-person-${currentPersonId}-score">${currPersonTasks[j].getAttribute('Score')}</td>`).appendTo($('#tb-results').children().last());
-                        
+            if (timerStarted == 0) {
+                $(`<td id="tsk-tb-median">Median:</td>`).appendTo($('#tb-results').children().last());
+                $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}"><td id="tb-name-task"></tr>`).appendTo($('#tb-results'));
+                for (let j = 0; j < currPersonTasks.length; j++) {
+                    var currentPersonId = currPersonTasks[j].getAttribute('PersonId');
+                    for (let l = 0; l < persons.length; l++) {
+                        if (persons[l].getAttribute('Id') == currentPersonId) {
+                            $(`<td id="tsk-tb-person-${currentPersonId}-score">${currPersonTasks[j].getAttribute('Score')}</td>`).appendTo($('#tb-results').children().last());
+
+                        }
+
                     }
-                    
                 }
+                $(`<td id="tsk-tb-median-tsk-${tasks[i].getAttribute('Id')}-score">${tasks[i].getAttribute('Median')}</td>`).appendTo($('#tb-results').children().last());
             }
-            $(`<td id="tsk-tb-median-tsk-${tasks[i].getAttribute('Id')}-score">${tasks[i].getAttribute('Median')}</td>`).appendTo($('#tb-results').children().last());
         }
 
     }
@@ -118,7 +120,10 @@ function parseXmlResponse(currentXml) {
     console.log(persons);
 }
 
+var timerStarted = 0;
+
 function StartTimerTask(initTime) {
+    timerStarted = 1;
     if ($('.is-current-active-1') == null || $('.is-current-active-1') == undefined)
         return
 
