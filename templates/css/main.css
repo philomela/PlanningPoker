@@ -121,6 +121,15 @@ tr, td {
     width: 80%;
 }
 
+.task-room:hover {
+    font-size: 16px;
+    cursor: pointer
+}
+
+.user-name-text-right-menu {
+    margin-left: 15px;
+}
+
 .is-current-active-1 {
     background-color: #40AA29;
 }

@@ -61,7 +61,7 @@ function parseXmlResponse(currentXml) {
     var persons = currentXml.getElementsByTagName('Persons')[0].getElementsByTagName('Person')
     if (persons != null && persons != undefined)
         for (var i = 0; i < persons.length; i++) {
-            $(`<li class="person${persons[i].getAttribute('Id')}">${persons[i].getAttribute('UserName')}</li>`).appendTo($('.right-menu-room ul'));
+            $(`<li class="person${persons[i].getAttribute('Id')}"><i class="fa fa-user-o" aria-hidden="true"></i><span class="user-name-text-right-menu">${persons[i].getAttribute('UserName')}<span></li>`).appendTo($('.right-menu-room ul'));
         }
     var nameMeeting = currentXml.getElementsByTagName('Room')[0].getAttribute('NameRoom');
     if (nameMeeting != null & persons != undefined) {
@@ -142,6 +142,12 @@ $(document).on('click', '.button-room', (e) => {
     e.preventDefault()
     socketInst.send(`ChangeVote==<Change><AddVote vote="1" score="${e.target.id.split('-')[1]}"/></Change>`)
     console.log(e.target.id.split('-')[1])
+});
+
+$(document).on('click', '.task-room', (e) => {
+    console.log('hello app')
+    console.log($(this))
+    $(this).css({'font-weigth': 'bold'})
 });
 
 $('#yellow').click(() => {
