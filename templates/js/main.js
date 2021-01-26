@@ -85,7 +85,7 @@ function parseXmlResponse(currentXml) {
             $(`<div id="task-${tasks[i].getAttribute('Id')}" class="task-room is-current-active-${tasks[i].getAttribute('IsCurrentActive')}">${tasks[i].getAttribute('NameTask')}</div><div class="time-task-discussion">
                         ${tasks[i].getAttribute('TimeDiscussion')} :min</div>`).appendTo($('.tasks-left-menu-room'));
 
-            $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}"><td id="tb-name-task">${tasks[i].getAttribute('NameTask')}</tr>`).appendTo($('#tb-results'));
+            $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb"><td id="tb-name-task">${tasks[i].getAttribute('NameTask')}</tr>`).appendTo($('#tb-results'));
 
             var currPersonTasks = tasks[i].getElementsByTagName('PersonTask');
 
@@ -100,7 +100,7 @@ function parseXmlResponse(currentXml) {
             }
             if (timerStarted == 0) {
                 $(`<td id="tsk-tb-median">Median:</td>`).appendTo($('#tb-results').children().last());
-                $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}"><td id="tb-name-task"></tr>`).appendTo($('#tb-results'));
+                $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb-nested"><td id="tb-name-task"></tr>`).appendTo($('#tb-results'));
                 for (let j = 0; j < currPersonTasks.length; j++) {
                     var currentPersonId = currPersonTasks[j].getAttribute('PersonId');
                     for (let l = 0; l < persons.length; l++) {

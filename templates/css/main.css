@@ -64,9 +64,9 @@ footer {
 
 .main-room {
     --background-color: bisque;
-    border-left: 1px solid black;
-    border-right: 1px solid black;
-    height: 500px;
+    --border-left: 1px solid black;
+    --border-right: 1px solid black;
+    --height: 500px;
 }
 
 .name-room {
@@ -76,32 +76,43 @@ footer {
 
 .results-voting, tr, td {
     font-size: 14px; 
+    color: white;
 }
+
 
 tr, td {
     border: 1px solid black;
+    padding: 3px 10px 3px 10px;
+}
+
+.name-left-menu {
+    background-color: #623a69;
+    color: white;
 }
 
 .name-right-menu {
-    font-size: 16px;
-    font-weight: bold;
+    background-color: #a6d6ac;
+    color: black;
 }
 
 .name-left-menu, .name-results-menu, .name-right-menu {
     font-size: 16px;
     font-weight: bold;
+    padding: 5px;
 }
 
 .left-menu-room {
     --background-color: bisque;
     font-size: 14px;
-    height: 500px;
+    --height: 500px;
+    box-shadow: 20px 0px 20px rgba(0,0,0,0.25);
 }
 
 .right-menu-room {
     --background-color: blue;
     list-style-type: none;
-    height: 500px;
+    --height: 500px;
+    box-shadow: -20px 0px 20px rgba(0,0,0,0.25);
 }
 .right-menu-room ul {
     padding: 0;
@@ -111,6 +122,15 @@ tr, td {
     font-size: 14px;
     list-style-type: none;
     padding: 0;
+}
+
+.footer-container-results {
+    margin-top: 10px; 
+    background: url(/templates/img/footer-pattern.png) #52113c;
+    box-shadow: 0 -8px 15px rgba(0,0,0,0.35);
+    --background-color: #52113c;
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 .task-room {
@@ -124,6 +144,18 @@ tr, td {
 .task-room:hover {
     font-size: 16px;
     cursor: pointer
+}
+
+.tsk-tb {
+    background-color: #52113c;
+}
+
+.tsk-tb-nested {
+    background-color: #4e2540;
+}
+
+#tb-results {
+    width: 100%;
 }
 
 .user-name-text-right-menu {
@@ -153,7 +185,8 @@ tr, td {
     --height: 300px;
     background-color: white;
     border-radius: 10px;
-    border: 1px solid black;
+    border: 1px solid #423e40;
+    margin-top: 8px;
 }
 
 .start-voting-btn {
