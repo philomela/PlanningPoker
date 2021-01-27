@@ -104,6 +104,18 @@ CREATE TABLE ServerPlanningPoker.TasksResults(
 )
 GO
 
+CREATE TABLE ServerPlanningPoker.Scores_Dictionary (
+    Id INT PRIMARY KEY IDENTITY,
+    Score INT NOT NULL,
+    [Decryption] VARCHAR(300)
+)
+GO
+
+INSERT INTO ServerPlanningPoker.Scores_Dictionary(Score, [Decryption])
+        VALUES(999, 'Coffee break')
+              ,(777, 'Question')
+GO
+
 /*Процедура добавление нового пользователя*/
 CREATE PROCEDURE [Add_User](@LoginName VARCHAR(50), 
                             @Email VARCHAR(100), 
@@ -363,7 +375,8 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                                     FROM ServerPlanningPoker.Votes 
                                         WHERE TaskId = (SELECT TOP(1) Id 
                                                             FROM ServerPlanningPoker.Tasks 
-                                                                WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC))
+                                                                WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC)
+                                            AND Score NOT IN (SELECT Score FROM ServerPlanningPoker.Scores_Dictionary))
                                 ,CURRENT_TIMESTAMP
                                 ,(SELECT TOP(1) Id 
                                     FROM ServerPlanningPoker.Tasks
@@ -442,6 +455,7 @@ DROP TABLE ServerPlanningPoker.ViewModels
 DROP TABLE ServerPlanningPoker.Persons
 DROP TABLE ServerPlanningPoker.Sessions
 DROP TABLE ServerPlanningPoker.TasksResults
+DROP TABLE ServerPlanningPoker.Scores_Dictionary
 DROP PROCEDURE u0932131_admin.NewPlanningPokerRoom
 DROP PROCEDURE u0932131_admin.Add_User
 DROP PROCEDURE u0932131_admin.CreateConnection
@@ -470,5 +484,21 @@ INSERT INTO TestTable_01 VALUE ()
 SELECT * FROM TestTable_01
 
 DELETE FROM ServerPlanningPoker.Persons
+
+SELECT * FROM ServerPlanningPoker.Persons
+
+
+DECLARE @UserName VARCHAR(30)
+
+
+SELECT @Age = 1 
+SELECT @Age
+
+
+DECLARE @Age INT
+SELECT TOP(1) @Age = Id FROM ServerPlanningPoker.Tasks WHERE RoomId = 14
+SELECT @Age
+
+SELECT * FROM ServerPlanningPoker.Scores_Dictionary
 
 

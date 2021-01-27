@@ -111,7 +111,15 @@ function parseXmlResponse(currentXml) {
 
                     }
                 }
-                $(`<td id="tsk-tb-median-tsk-${tasks[i].getAttribute('Id')}-score">${tasks[i].getAttribute('Median')}</td>`).appendTo($('#tb-results').children().last());
+                var currentMedian;
+                if (!tasks[i].getAttribute('Median')){
+                    currentMedian = "Unknown";
+                }
+                else {
+                    currentMedian = tasks[i].getAttribute('Median');
+                }
+                
+                $(`<td id="tsk-tb-median-tsk-${tasks[i].getAttribute('Id')}-score">${currentMedian}</td>`).appendTo($('#tb-results').children().last());
             }
         }
 
@@ -141,13 +149,21 @@ function StartTimerTask(initTime) {
 $(document).on('click', '.button-room', (e) => {
     e.preventDefault()
     socketInst.send(`ChangeVote==<Change><AddVote vote="1" score="${e.target.id.split('-')[1]}"/></Change>`)
+    console.log(e.target)
     console.log(e.target.id.split('-')[1])
 });
 
 $(document).on('click', '.task-room', (e) => {
-    console.log('hello app')
+    console.log(e)
     console.log($(this))
-    $(this).css({'font-weigth': 'bold'})
+    console.log(e.target.id)
+    //$(this).css("font-size", "16px")
+    //$(this).css({"font-size": "16px"})
+    //$(e.target.id).css("font-size", "16px")
+    $('.task-room').css({"font-size": "12px", "font-weight": "normal"})
+    $('#'+e.target.id).css({"font-size": "14px", "font-weight": "bold"})
+    
+    console.log('#'+e.target.id)
 });
 
 $('#yellow').click(() => {

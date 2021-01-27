@@ -6,19 +6,35 @@ header {
     
 }
 main {
+    position: relative;
+    z-index: 1;
     background: url('/templates/img/igralnye-kosti.png');
     background-size: cover;
-    
-    background-color: #48173e;
-    
+    --background-image: url('/templates/img/igralnye-kosti.png');
+    --background-color: #48173e; 
+}
+main:after {
+    position: absolute;
+    z-index: 2;
+    content: '';
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    --background-image: url('/templates/img/igralnye-kosti.png');
+    background-size: cover;
+    background: linear-gradient(to top left, rgba(30, 90, 165, 0.3), rgba(109, 14, 88, 0.3));
+    --background-color: #48173e; 
 }
 .main-slide {
     height: 350px;
 }
 .left-main-block {
+    z-index: 3;  
     color: #FCF8FF;
 }
 .right-main-block {
+    z-index: 3;
     color: #FCF8FF;
 }
 .controls-block {
@@ -144,7 +160,7 @@ tr, td {
 
 .task-room:hover {
     font-size: 13px;
-    font-weight: bold;
+    font-weight: bold !important;
     cursor: pointer
 }
 
@@ -239,4 +255,9 @@ tr, td {
 .name-right-menu  i {
     display: inline-block;
     width: 10%
+}
+
+.how-it-works {
+    color: white;
+    background: linear-gradient(to top left, #1e5aa5, #6d0e58);
 }
