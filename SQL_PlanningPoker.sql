@@ -97,7 +97,7 @@ GO
 
 CREATE TABLE ServerPlanningPoker.TasksResults(
     Id INT PRIMARY KEY IDENTITY,
-    Median DECIMAL(9,2) NOT NULL,
+    Median DECIMAL(9,2),
     DateCreated DATETIME2 NOT NULL,
     TaskId INT UNIQUE NOT NULL REFERENCES ServerPlanningPoker.Tasks (Id),
     RoomId INT NOT NULL REFERENCES ServerPlanningPoker.Rooms (Id) ON DELETE CASCADE
@@ -114,6 +114,7 @@ GO
 INSERT INTO ServerPlanningPoker.Scores_Dictionary(Score, [Decryption])
         VALUES(999, 'Coffee break')
               ,(777, 'Question')
+              ,(0, 'Not voice')
 GO
 
 /*Процедура добавление нового пользователя*/
@@ -330,7 +331,7 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                                                 WHERE RoomId = @RoomId AND OnActive = 1)
 
                         UPDATE ServerPlanningPoker.Votes
-                        SET Score = @Score, Vote = 1
+                        SET Score = @Score, Vote = @Vote
                         WHERE RoomId = @RoomId AND PersonId = @PersonId AND TaskId = @TaskId;
                         
                         EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT;
@@ -357,7 +358,7 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                             WHERE RoomId = @RoomId AND Id = (SELECT Id 
                                                                 FROM tasksTable 
                                                                     WHERE RowId = (SELECT TOP(1) C.value('@taskId', 'INT')
-                                                                                        FROM @xmlChanges.nodes('/Change/StartVoting') T(C)));
+                                                                                        FROM @xmlChanges.nodes('/Change/StartVoting') T(C)))
 
                         EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
@@ -377,12 +378,13 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                                                             FROM ServerPlanningPoker.Tasks 
                                                                 WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC)
                                             AND Score NOT IN (SELECT Score FROM ServerPlanningPoker.Scores_Dictionary))
+                                            --AND Vote = 1)
                                 ,CURRENT_TIMESTAMP
                                 ,(SELECT TOP(1) Id 
                                     FROM ServerPlanningPoker.Tasks
                                         WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC)
                                 ,@RoomId
-                                )
+                                ) 
 
                         EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
@@ -500,5 +502,28 @@ SELECT TOP(1) @Age = Id FROM ServerPlanningPoker.Tasks WHERE RoomId = 14
 SELECT @Age
 
 SELECT * FROM ServerPlanningPoker.Scores_Dictionary
+SELECT * FROM ServerPlanningPoker.Persons
 
 
+SELECT TOP(1) IIF((ROW_NUMBER(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY Score)
+                                                            OVER (PARTITION BY RoomId)) = 0, 5, 2) AS Median 
+                                    FROM ServerPlanningPoker.Votes 
+                                        WHERE TaskId = (SELECT TOP(1) Id 
+                                                            FROM ServerPlanningPoker.Tasks 
+                                                                WHERE Id =122 ORDER BY Id DESC)
+                                            AND Score NOT IN (SELECT Score FROM ServerPlanningPoker.Scores_Dictionary)
+                                            
+
+                                            select * from ServerPlanningPoker.Rooms ORDER BY 1 DESC
+
+
+                                            SELECT * FROM ServerPlanningPoker.Votes 
+                                        WHERE TaskId IN (SELECT Id 
+                                                            FROM ServerPlanningPoker.Tasks 
+                                                                WHERE RoomId = 44 )
+                                                    SELECT *
+                                                            FROM ServerPlanningPoker.Tasks 
+                                                                WHERE RoomId = 44
+
+
+                                                                SELECT * FROM ServerPlanningPoker.TasksResults ORDER BY 1 DESC

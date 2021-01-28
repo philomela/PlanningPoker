@@ -18,6 +18,7 @@
 
 
 let socketInst, currentXmlString, currentXml;
+const coffeeIcon = 999, questionIcon = 777, coffeeIconMedian = "999.00", questionIconMedian = "777.00"
 
 $.extend({
     getUrlVars: function () {
@@ -105,19 +106,33 @@ function parseXmlResponse(currentXml) {
                     var currentPersonId = currPersonTasks[j].getAttribute('PersonId');
                     for (let l = 0; l < persons.length; l++) {
                         if (persons[l].getAttribute('Id') == currentPersonId) {
-                            $(`<td id="tsk-tb-person-${currentPersonId}-score">${currPersonTasks[j].getAttribute('Score')}</td>`).appendTo($('#tb-results').children().last());
+                            var currentScore = currPersonTasks[j].getAttribute('Score');
+                            if(currentScore == questionIcon){
+                                currentScore = '<i class="fa fa-question" aria-hidden="true"></i>'
+                            }
+                            else if (currentScore == coffeeIcon)
+                                currentScore = '<i class="fa fa-coffee" aria-hidden="true"></i>'
+                            $(`<td id="tsk-tb-person-${currentPersonId}-score">${currentScore}</td>`).appendTo($('#tb-results').children().last());
 
                         }
 
                     }
                 }
-                var currentMedian;
-                if (!tasks[i].getAttribute('Median')){
+                var currentMedian = tasks[i].getAttribute('Median');
+                console.log(typeof(currentMedian))
+                console.log(typeof(coffeeIconMedian))
+                if (!currentMedian){
                     currentMedian = "Unknown";
+                }
+                else if (currentMedian == questionIconMedian){
+                    currentMedian = '<i class="fa fa-question" aria-hidden="true"></i>';
+                }
+                else if (currentMedian == coffeeIconMedian) {
+                    currentMedian = '<i class="fa fa-coffee" aria-hidden="true"></i>';
                 }
                 else {
                     currentMedian = tasks[i].getAttribute('Median');
-                }
+                } 
                 
                 $(`<td id="tsk-tb-median-tsk-${tasks[i].getAttribute('Id')}-score">${currentMedian}</td>`).appendTo($('#tb-results').children().last());
             }
