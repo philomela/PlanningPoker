@@ -261,3 +261,18 @@ tr, td {
     color: white;
     background: linear-gradient(to top left, #1e5aa5, #6d0e58);
 }
+
+.enter-room {
+    padding: 0px !important;
+    background: linear-gradient(to top left, #1e5aa5, #6d0e58);
+}
+
+.enter-the-room h1 a {
+    --vertical-align: middle;
+    --display: inline;
+    color: white;
+}
+
+.enter-the-room h1 a {
+    display: flex;
+}
