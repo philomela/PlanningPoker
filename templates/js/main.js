@@ -73,7 +73,7 @@ function parseXmlResponse(currentXml) {
     if (tasks != null && tasks != undefined) {
         console.log(tasks)
         for (let i = 0; i < tasks.length; i++) {
-            if (tasks[i].getAttribute('IsCurrentActive') == 1) {
+            if (tasks[i].getAttribute('IsCurrentActive') == 1 && timerStarted) {
                 console.log(tasks[i].getAttribute('IsCurrentActive'));
                 StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));
                 var currentPersonTasks = tasks[i].getElementsByTagName('PersonTask')
@@ -143,10 +143,10 @@ function parseXmlResponse(currentXml) {
     console.log(persons);
 }
 
-var timerStarted = 0;
+var timerStarted = false;
 
 function StartTimerTask(initTime) {
-    timerStarted = 1;
+    timerStarted = true;
     if ($('.is-current-active-1') == null || $('.is-current-active-1') == undefined)
         return
 
@@ -166,19 +166,6 @@ $(document).on('click', '.button-room', (e) => {
     socketInst.send(`ChangeVote==<Change><AddVote vote="1" score="${e.target.id.split('-')[1]}"/></Change>`)
     console.log(e.target)
     console.log(e.target.id.split('-')[1])
-});
-
-$(document).on('click', '.task-room', (e) => {
-    console.log(e)
-    console.log($(this))
-    console.log(e.target.id)
-    //$(this).css("font-size", "16px")
-    //$(this).css({"font-size": "16px"})
-    //$(e.target.id).css("font-size", "16px")
-    $('.task-room').css({"font-size": "12px", "font-weight": "normal"})
-    $('#'+e.target.id).css({"font-size": "14px", "font-weight": "bold"})
-    
-    console.log('#'+e.target.id)
 });
 
 $('#yellow').click(() => {

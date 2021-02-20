@@ -1,0 +1,5 @@
+.task-room:hover {
+    font-size: 13px;
+    font-weight: bold !important;
+    cursor: pointer
+}

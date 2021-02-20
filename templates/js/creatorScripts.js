@@ -14,4 +14,17 @@ $(document).on('click', '.task-room', (e) => {
 $('#finish-voting').click(() => {
     socketInst.send(`StopVoting==`)
     timerStarted = 0;
-})
+});
+
+$(document).on('click', '.task-room', (e) => {
+    console.log(e)
+    console.log($(this))
+    console.log(e.target.id)
+    //$(this).css("font-size", "16px")
+    //$(this).css({"font-size": "16px"})
+    //$(e.target.id).css("font-size", "16px")
+    $('.task-room').css({"font-size": "12px", "font-weight": "normal"})
+    $('#'+e.target.id).css({"font-size": "14px", "font-weight": "bold"})
+    
+    console.log('#'+e.target.id)
+});

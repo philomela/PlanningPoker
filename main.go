@@ -259,6 +259,7 @@ func newRoomHandler(w http.ResponseWriter, r *http.Request) {
 type RoomPatternHtml struct {
 	CreatorTools   template.HTML
 	CreatorScripts template.HTML
+	CreatorStyles  template.HTML
 }
 
 /*Метод отображения приглашения входа в комнату*/
@@ -289,9 +290,17 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Println(err)
 			}
 			creatorScriptsDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorRoomScripts.html")
+			if err != nil {
+				fmt.Println(err)
+			}
+			creatorStylesDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorStyles.html")
+			if err != nil {
+				fmt.Println(err)
+			}
 			roomPatterns := RoomPatternHtml{
 				CreatorTools:   template.HTML(creatorToolsDataFile),
 				CreatorScripts: template.HTML(creatorScriptsDataFile),
+				CreatorStyles:  template.HTML(creatorStylesDataFile),
 			}
 
 			tmpl, _ := template.ParseFiles("templates/room.html")
