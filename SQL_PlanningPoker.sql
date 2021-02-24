@@ -251,6 +251,7 @@ CREATE PROCEDURE [Build_First_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
                                 FOR XML PATH ('Person'), TYPE ) AS Persons,
                                 (SELECT (ROW_NUMBER() OVER (ORDER BY T.Id ASC)) AS '@Id',
                                         T.Name AS '@NameTask',
+                                        T.Completed AS '@Completed',
                                         T.OnActive AS '@IsCurrentActive',
                                         T.TimeDiscussion AS '@TimeDiscussion',
                                         (SELECT Median

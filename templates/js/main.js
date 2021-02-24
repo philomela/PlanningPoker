@@ -72,8 +72,8 @@ function parseXmlResponse(currentXml) {
     var tasks = currentXml.getElementsByTagName('Tasks')[0].getElementsByTagName('Task')
     if (tasks != null && tasks != undefined) {
         console.log(tasks)
-        for (let i = 0; i < tasks.length; i++) {
-            if (tasks[i].getAttribute('IsCurrentActive') == 1 && timerStarted) {
+        for (let i = 0; i < tasks.length; i++) {          
+            if (tasks[i].getAttribute('IsCurrentActive') == 1) {
                 console.log(tasks[i].getAttribute('IsCurrentActive'));
                 StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));
                 var currentPersonTasks = tasks[i].getElementsByTagName('PersonTask')
@@ -85,6 +85,9 @@ function parseXmlResponse(currentXml) {
             }
             $(`<div id="task-${tasks[i].getAttribute('Id')}" class="task-room is-current-active-${tasks[i].getAttribute('IsCurrentActive')}">${tasks[i].getAttribute('NameTask')}</div><div class="time-task-discussion">
                         ${tasks[i].getAttribute('TimeDiscussion')} :min</div>`).appendTo($('.tasks-left-menu-room'));
+                        if (tasks[i].getAttribute('Completed') == 1){
+                            $(`#task-${tasks[i].getAttribute('Id')}`).css({ "text-decoration": "line-through", "pointer-events": "none"});
+                        }
 
             $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb"><td id="tb-name-task">${tasks[i].getAttribute('NameTask')}</tr>`).appendTo($('#tb-results'));
 
