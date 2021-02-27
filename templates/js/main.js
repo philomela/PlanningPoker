@@ -51,13 +51,10 @@ function createWebSocket() {
     }
 }
 
-function startTimeTask(timerElement) {
-    timerElement.text = timerElement.text - 1;
-}
-
 function parseXmlResponse(currentXml) {
     $('.right-menu-room ul, .name-meeting h1, .tasks-left-menu-room, #tb-results').empty();
     var parserXml = new DOMParser();
+    countTimerStarted++;
     currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
     var persons = currentXml.getElementsByTagName('Persons')[0].getElementsByTagName('Person')
     if (persons != null && persons != undefined)
@@ -75,7 +72,17 @@ function parseXmlResponse(currentXml) {
         for (let i = 0; i < tasks.length; i++) {          
             if (tasks[i].getAttribute('IsCurrentActive') == 1) {
                 console.log(tasks[i].getAttribute('IsCurrentActive'));
-                StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));
+                
+                if (countTimerStarted <= 1){
+                    StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));
+                }
+                
+                if (!timerStarted){
+                    StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));
+                    
+                    
+                }
+                
                 var currentPersonTasks = tasks[i].getElementsByTagName('PersonTask')
                 for (k = 0; k < currentPersonTasks.length; k++) {
                     if (currentPersonTasks[k].getAttribute('Vote') != 0) {
@@ -102,7 +109,7 @@ function parseXmlResponse(currentXml) {
                     }
                 }
             }
-            if (timerStarted == 0) {
+            if (!timerStarted) {
                 $(`<td id="tsk-tb-median">Median:</td>`).appendTo($('#tb-results').children().last());
                 $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb-nested"><td id="tb-name-task"></tr>`).appendTo($('#tb-results'));
                 for (let j = 0; j < currPersonTasks.length; j++) {
@@ -147,6 +154,7 @@ function parseXmlResponse(currentXml) {
 }
 
 var timerStarted = false;
+var countTimerStarted = 0;
 
 function StartTimerTask(initTime) {
     timerStarted = true;
@@ -160,7 +168,7 @@ function StartTimerTask(initTime) {
         $('.is-current-active-1').next().text(timeTask);
         console.log(timeTask);
     }, 1000)
-    setTimeout(() => { clearInterval(timerTask) }, stopTime)
+    setTimeout(() => { clearInterval(timerTask); timerStarted = false}, stopTime)
     console.log(stopTime)
 }
 
