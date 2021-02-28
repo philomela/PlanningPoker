@@ -13,7 +13,8 @@ $(document).on('click', '.task-room', (e) => {
 
 $('#finish-voting').click(() => {
     socketInst.send(`StopVoting==`)
-    timerStarted = 0;
+    timerStarted = false;
+    clearInterval(timerTask)
 });
 
 $(document).on('click', '.task-room', (e) => {

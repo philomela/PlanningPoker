@@ -109,6 +109,11 @@ function parseXmlResponse(currentXml) {
                             $(`#task-${tasks[i].getAttribute('Id')}`).next().css({"color": "#CCCCCC", "pointer-events": "none"})
                         }
 
+                        if (i == tasks.length - 1 && !hasCurrentActive) {
+                            clearInterval(timerTask);
+                            timerStarted = false;
+                        }
+
             $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb"><td id="tb-name-task">${tasks[i].getAttribute('NameTask')}</tr>`).appendTo($('#tb-results'));
 
             var currPersonTasks = tasks[i].getElementsByTagName('PersonTask');
@@ -167,6 +172,7 @@ function parseXmlResponse(currentXml) {
 }
 
 var timerStarted = false;
+var timerTask;
 var countTimerStarted = 0;
 
 function StartTimerTask(initTime) {
@@ -176,7 +182,7 @@ function StartTimerTask(initTime) {
 
     var timeTask = initTime * 60, stopTime = timeTask * 1000;
     console.log(timeTask)
-    var timerTask = setInterval(() => {
+        timerTask = setInterval(() => {
         timeTask -= 1;
         timeTaskOut = `${Math.trunc(timeTask / 60) }-m: ${Math.trunc(timeTask % 60)}-sec`
         $('.is-current-active-1').next().text(timeTaskOut);
