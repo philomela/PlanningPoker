@@ -69,7 +69,9 @@ function parseXmlResponse(currentXml) {
     var tasks = currentXml.getElementsByTagName('Tasks')[0].getElementsByTagName('Task')
     if (tasks != null && tasks != undefined) {
         console.log(tasks)
-        for (let i = 0; i < tasks.length; i++) {          
+             
+        for (let i = 0; i < tasks.length; i++) {
+                
             if (tasks[i].getAttribute('IsCurrentActive') == 1) {
                 console.log(tasks[i].getAttribute('IsCurrentActive'));
                 
@@ -94,6 +96,17 @@ function parseXmlResponse(currentXml) {
                         ${tasks[i].getAttribute('TimeDiscussion')} :min</div>`).appendTo($('.tasks-left-menu-room'));
                         if (tasks[i].getAttribute('Completed') == 1){
                             $(`#task-${tasks[i].getAttribute('Id')}`).css({ "text-decoration": "line-through", "pointer-events": "none"});
+                        }
+                        var hasCurrentActive = false;
+                        for (let i = 0; i < tasks.length; i++){
+                            if (tasks[i].getAttribute('IsCurrentActive') == 1){
+                                hasCurrentActive = true;
+                            }
+                        }
+
+                        if (tasks[i].getAttribute('Completed') == 0 && tasks[i].getAttribute('IsCurrentActive') == 0 && hasCurrentActive){
+                            $(`#task-${tasks[i].getAttribute('Id')}`).css({ "color": "#CCCCCC", "pointer-events": "none"});
+                            $(`#task-${tasks[i].getAttribute('Id')}`).next().css({"color": "#CCCCCC", "pointer-events": "none"})
                         }
 
             $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb"><td id="tb-name-task">${tasks[i].getAttribute('NameTask')}</tr>`).appendTo($('#tb-results'));
@@ -165,7 +178,9 @@ function StartTimerTask(initTime) {
     console.log(timeTask)
     var timerTask = setInterval(() => {
         timeTask -= 1;
-        $('.is-current-active-1').next().text(timeTask);
+        timeTaskOut = `${Math.trunc(timeTask / 60) }-m: ${Math.trunc(timeTask % 60)}-sec`
+        $('.is-current-active-1').next().text(timeTaskOut);
+        $('.is-current-active-1').next().css({"background": "#4e2540", "color": "white"})
         console.log(timeTask);
     }, 1000)
     setTimeout(() => { clearInterval(timerTask); timerStarted = false}, stopTime)
