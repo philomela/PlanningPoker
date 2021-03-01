@@ -53,6 +53,7 @@ const (
 func main() {
 	//eventSthutdown := make(chan string)
 	router := mux.NewRouter()
+	router.HandleFunc("/unknownroom", unknownroomHandler).Methods("GET")
 	router.HandleFunc("/rooms", roomsHandler).Methods("GET")
 	router.HandleFunc("/loginform", loginFormHandler).Methods("GET")
 	router.HandleFunc("/create-room", createRoomHandler).Methods("POST")
@@ -449,6 +450,12 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pass or email or login was empty"))
 		return
 	}
+}
+
+func unknownroomHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ := template.ParseFiles("templates/unknownRoom.html")
+	tmpl.Execute(w, nil)
+	return
 }
 
 func registrationFormHandler(w http.ResponseWriter, r *http.Request) {

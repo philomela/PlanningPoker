@@ -43,8 +43,15 @@ function createWebSocket() {
 
     }
     socketInst.onmessage = function (event) {
+        
         currentXmlString = event.data;
-
+        
+        var parserXml = new DOMParser();
+        currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
+        console.log(currentXml.getElementsByTagName('Error')[0], currentXml);
+        if (currentXml.getElementsByTagName('Room')[0].getAttribute('Error') == "UnknownRoom"){
+            document.location.href = "unknownroom";
+        }
 
         parseXmlResponse(currentXml);
         //alert(currentXmlString);
@@ -52,10 +59,12 @@ function createWebSocket() {
 }
 
 function parseXmlResponse(currentXml) {
+    
     $('.right-menu-room ul, .name-meeting h1, .tasks-left-menu-room, #tb-results').empty();
     var parserXml = new DOMParser();
     countTimerStarted++;
     currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
+    
     var persons = currentXml.getElementsByTagName('Persons')[0].getElementsByTagName('Person')
     if (persons != null && persons != undefined)
         for (var i = 0; i < persons.length; i++) {
@@ -88,7 +97,7 @@ function parseXmlResponse(currentXml) {
                 var currentPersonTasks = tasks[i].getElementsByTagName('PersonTask')
                 for (k = 0; k < currentPersonTasks.length; k++) {
                     if (currentPersonTasks[k].getAttribute('Vote') != 0) {
-                        $(`.person${currentPersonTasks[k].getAttribute('PersonId')}`).css({ "background": "red" });
+                        $(`.person${currentPersonTasks[k].getAttribute('PersonId')}`).css({ "background": "#4d387e", "color": "white" });
                     }
                 }
             }
@@ -112,6 +121,7 @@ function parseXmlResponse(currentXml) {
                         if (i == tasks.length - 1 && !hasCurrentActive) {
                             clearInterval(timerTask);
                             timerStarted = false;
+                            $('.is-current-active-1').next().text("Completed");
                         }
 
             $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb"><td id="tb-name-task">${tasks[i].getAttribute('NameTask')}</tr>`).appendTo($('#tb-results'));
@@ -186,10 +196,14 @@ function StartTimerTask(initTime) {
         timeTask -= 1;
         timeTaskOut = `${Math.trunc(timeTask / 60) }-m: ${Math.trunc(timeTask % 60)}-sec`
         $('.is-current-active-1').next().text(timeTaskOut);
-        $('.is-current-active-1').next().css({"background": "#4e2540", "color": "white"})
+        $('.is-current-active-1').next().css({"background": "#6a155d", "color": "white", "padding": "3px"})
         console.log(timeTask);
     }, 1000)
-    setTimeout(() => { clearInterval(timerTask); timerStarted = false}, stopTime)
+    setTimeout(() => { 
+        clearInterval(timerTask); 
+        timerStarted = false; //Пересмотреть логику когда никто не проголосовал за задачу, после истечения таймера пропадает complete
+        $('.is-current-active-1').next().text("Completed");
+    }, stopTime)
     console.log(stopTime)
 }
 

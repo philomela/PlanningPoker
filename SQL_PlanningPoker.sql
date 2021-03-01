@@ -37,6 +37,7 @@ CREATE TABLE ServerPlanningPoker.Rooms(
     Id INT PRIMARY KEY IDENTITY,
     NameRoom VARCHAR(200) NOT NULL,
     Created DATETIME2,
+    Deleted DATETIME2,
     IsActive BIT,
     Creator INT NOT NULL,
     [GUID] VARCHAR(36) UNIQUE
@@ -244,7 +245,7 @@ GO
 /*Процедура получения View Model*/
 CREATE PROCEDURE [Build_First_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
     AS
-        SET @xmlVMOut = (SELECT (SELECT P.LoginName AS '@UserName',
+        SET @xmlVMOut = ISNULL((SELECT (SELECT P.LoginName AS '@UserName',
                                         (ROW_NUMBER() OVER (ORDER BY P.Id ASC)) AS '@Id' 
                                 FROM ServerPlanningPoker.Persons AS P
                                 WHERE P.Id IN (SELECT C.PersonId FROM ServerPlanningPoker.Connections AS C WHERE C.RoomId = @roomId)
@@ -268,8 +269,8 @@ CREATE PROCEDURE [Build_First_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
                                 FOR XML PATH ('Task'), TYPE) AS Tasks,
                                 R.NameRoom
                         FROM ServerPlanningPoker.Rooms AS R
-                     WHERE R.Id = @roomId
-                     FOR XML RAW ('Room'), TYPE);
+                     WHERE R.Id = @roomId AND R.IsActive = 1
+                     FOR XML RAW ('Room'), TYPE), (SELECT 'UnknownRoom' AS 'Error' FOR XML RAW ('Room'), TYPE));
 GO
 
 /*Процедура проверки пользователя*/
@@ -390,7 +391,19 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                         EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
                     END
+                ELSE IF @nameChanges = 'FinishPlanning'
+                    BEGIN
+                        
+                        UPDATE ServerPlanningPoker.Rooms 
+                        SET Deleted = CURRENT_TIMESTAMP,
+                            IsActive = 0
+                        WHERE Id = @RoomId
+
+                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
+                        SELECT @xmlOut;
+                    END
                 COMMIT;
+
             END TRY
 
             BEGIN CATCH
@@ -528,3 +541,7 @@ SELECT TOP(1) IIF((ROW_NUMBER(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY Score)
 
 
                                                                 SELECT * FROM ServerPlanningPoker.TasksResults ORDER BY 1 DESC
+
+
+
+SELECT * FROM ServerPlanningPoker.Tasks ORDER BY 1 DESC

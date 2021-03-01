@@ -14,7 +14,12 @@ $(document).on('click', '.task-room', (e) => {
 $('#finish-voting').click(() => {
     socketInst.send(`StopVoting==`)
     timerStarted = false;
-    clearInterval(timerTask)
+    clearInterval(timerTask);
+    $('.is-current-active-1').next().text("Completed");
+});
+
+$('#finish-planning').click(() => {
+    socketInst.send(`FinishPlanning==`)
 });
 
 $(document).on('click', '.task-room', (e) => {

@@ -137,7 +137,7 @@ tr, td {
 .right-menu-room li {
     font-size: 12px;
     list-style-type: none;
-    padding: 0;
+    padding: 3px;
 }
 
 .footer-container-results {
@@ -177,6 +177,7 @@ tr, td {
 .is-current-active-1 {
     color: white;
     background-color: #40AA29;
+    padding: 3px;
 }
 
 .is-current-active-0 {
