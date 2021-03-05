@@ -162,6 +162,7 @@ func roomsHandler(w http.ResponseWriter, r *http.Request) {
 func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 	resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
 	if !resultCheckCookie {
+		http.Redirect(w, r, "/login", 301)
 		return //Добавить сообщение не авторизованного пользователя
 	}
 	userLogin := sessionsTool.GetUserLoginSession(r)
@@ -224,6 +225,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			if requestURL == currentServersSettings.ServerHost.Host+"newroom" {
 
 				w.Write([]byte(requestURL))
+			} else {
+				fmt.Println(currentServersSettings.ServerHost.Host)
+				w.Write([]byte(currentServersSettings.ServerHost.Host))
+
+				return
 			}
 			return
 		}
@@ -318,7 +324,6 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(w, nil)
 		return
 	}
-	return
 }
 
 func checkAuth(nextHandler http.HandlerFunc) http.HandlerFunc {
