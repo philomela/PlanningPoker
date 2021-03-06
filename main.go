@@ -88,7 +88,7 @@ func main() {
 	APP_IP := "localhost"
 	APP_PORT := "8080"
 	fmt.Println("Server started on:" + APP_IP + ":" + APP_PORT)
-	server := &http.Server{Addr: APP_IP + ":" + APP_PORT, Handler: router}
+	server := &http.Server{Addr: ":" + APP_PORT, Handler: router}
 
 	go func() {
 		server.ListenAndServe()
