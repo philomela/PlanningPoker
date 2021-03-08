@@ -1,22 +1,3 @@
-//Общие скрипты веб-сервиса
-
-// var canv = document.getElementById('canv'),
-// ctx = canv.getContext('2d');
-// //ctx.fillRect(0, 0, canv.width, canv.height)
-// //canv.height = 300;
-// canv.width = 480;
-// canv.height = 320;
-
-
-// var arrCards = new Array();
-// img = new Image()
-
-// img.src = '/templates/img/voice-1.png'
-
-// img.onload = x => ctx.drawImage(img, 0, 0, 100, 150);
-
-
-
 let socketInst, currentXmlString, currentXml;
 const coffeeIcon = 999, questionIcon = 777, coffeeIconMedian = "999.00", questionIconMedian = "777.00"
 
@@ -35,28 +16,6 @@ $.extend({
         return $.getUrlVars()[name];
     }
 });
-
-function createWebSocket() {
-    socketInst = new WebSocket('ws://localhost:8080/echo?roomId=' + $.getUrlVar('roomId'));
-    socketInst.onopen = function (event) {
-        socketInst.send("ChangeGetVM")
-
-    }
-    socketInst.onmessage = function (event) {
-        
-        currentXmlString = event.data;
-        
-        var parserXml = new DOMParser();
-        currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
-        console.log(currentXml.getElementsByTagName('Error')[0], currentXml);
-        if (currentXml.getElementsByTagName('Room')[0].getAttribute('Error') == "UnknownRoom"){
-            document.location.href = "unknownroom";
-        }
-
-        parseXmlResponse(currentXml);
-        //alert(currentXmlString);
-    }
-}
 
 function parseXmlResponse(currentXml) {
     
