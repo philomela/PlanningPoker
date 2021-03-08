@@ -1,30 +1,31 @@
 package main
 
 import (
-	RoomInteraction "ServerPlanningPoker/RoomInteraction"
-	ServerPlanningPoker "ServerPlanningPoker/ServerPlanningPokerSettings"
-	ServerPlanningPokerSettings "ServerPlanningPoker/ServerPlanningPokerSettings"
-	Sessions "ServerPlanningPoker/Sessions"
+	"PlanningPoker/PlanningPokerSettings"
+	"PlanningPoker/RoomInteraction"
+	"PlanningPoker/Sessions"
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/smtp"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 
-	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
+
+var currentServerSettings *PlanningPokerSettings.ServerSettings
+
+func init() {
+	currentServerSettings = PlanningPokerSettings.InitServerSetting()
+}
 
 var conns []RoomInteraction.Connection
 
@@ -34,10 +35,8 @@ type connections []*websocket.Conn
 //collectionRoom := make(map[string]connections)
 /* Открываем, читаем и парсим json */
 
-var client *redis.Client
 var sessionsTool = Sessions.InitSessionsTool()
 
-var currentServersSettings ServerPlanningPokerSettings.ServersSettings
 var currentSqlServer *sql.DB
 var err error
 
@@ -51,8 +50,10 @@ const (
 )
 
 func main() {
+
 	//eventSthutdown := make(chan string)
 	router := mux.NewRouter()
+	router.HandleFunc("/unknownroom", unknownroomHandler).Methods("GET")
 	router.HandleFunc("/rooms", roomsHandler).Methods("GET")
 	router.HandleFunc("/loginform", loginFormHandler).Methods("GET")
 	router.HandleFunc("/create-room", createRoomHandler).Methods("POST")
@@ -65,29 +66,15 @@ func main() {
 	router.HandleFunc("/", indexHandler).Methods("GET")
 	router.PathPrefix("/templates/").Handler(http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 
-	jsonFile, err := os.Open("./serversSettings.json")
-
-	if err != nil {
-		fmt.Println(err)
-		return //Добавить реализацию логирования ошибок в базу
-	} else {
-		defer jsonFile.Close()
-
-		byteArrayJsonSettings, _ := ioutil.ReadAll(jsonFile)
-		json.Unmarshal(byteArrayJsonSettings, &currentServersSettings)
-	}
-
-	currentSqlServer, err = ServerPlanningPoker.ServerSql{DSN: currentServersSettings.SQLServer.DSN, TypeSql: currentServersSettings.SQLServer.TypeSql}.OpenConnection()
+	currentSqlServer, err = PlanningPokerSettings.ServerSql{DSN: currentServerSettings.SQLServer.DSN, TypeSql: currentServerSettings.SQLServer.TypeSql}.OpenConnection()
 
 	fmt.Println("Server succsesful configured. ©Roman Solovyev")
 
 	//APP_IP := os.Getenv("APP_IP")
 	//APP_PORT := os.Getenv("APP_PORT")
 
-	APP_IP := "localhost"
-	APP_PORT := "8080"
-	fmt.Println("Server started on:" + APP_IP + ":" + APP_PORT)
-	server := &http.Server{Addr: APP_IP + ":" + APP_PORT, Handler: router}
+	fmt.Println("Server started on:" + currentServerSettings.ServerHost.Host + currentServerSettings.ServerHost.Port)
+	server := &http.Server{Addr: currentServerSettings.ServerHost.Host + currentServerSettings.ServerHost.Port, Handler: router}
 
 	go func() {
 		server.ListenAndServe()
@@ -95,10 +82,9 @@ func main() {
 			fmt.Println(err)
 		}
 	}()
-
+	fmt.Println("To stop the server enter the command: stop")
 	var key string
 	for {
-		fmt.Println("To stop the server enter the command: stop")
 		_, err = fmt.Scan(&key)
 		if key == "stop" {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -107,7 +93,6 @@ func main() {
 			return
 		}
 	}
-
 }
 
 /*Метод проверки существования комнаты по id*/
@@ -146,7 +131,7 @@ func roomsHandler(w http.ResponseWriter, r *http.Request) {
 	data := ViewData{
 		Success:     success,
 		RoomId:      roomId,
-		CurrentHost: currentServersSettings.ServerHost.Host,
+		CurrentHost: currentServerSettings.ServerHost.ExternalHostName,
 	}
 	fmt.Println(roomId)
 	fmt.Println(success)
@@ -161,6 +146,7 @@ func roomsHandler(w http.ResponseWriter, r *http.Request) {
 func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 	resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
 	if !resultCheckCookie {
+		http.Redirect(w, r, "/login", 301)
 		return //Добавить сообщение не авторизованного пользователя
 	}
 	userLogin := sessionsTool.GetUserLoginSession(r)
@@ -187,8 +173,7 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 			continue //Добавить реализацию логирования ошибок в базу
 		}
 	}
-	fmt.Println(currentServersSettings.ServerHost.Host)
-	w.Write([]byte(currentServersSettings.ServerHost.Host + currentServersSettings.ServerHost.Room + strings.ToLower(hello)))
+	w.Write([]byte(currentServerSettings.ServerHost.ExternalHostName + currentServerSettings.ServerHost.Room + strings.ToLower(hello)))
 	fmt.Println(resultSP)
 	fmt.Println(hello)
 	fmt.Println(roomId)
@@ -220,9 +205,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			sessionsTool.CreateNewSession(login, r, &w)
 			requestURL := r.Header.Get("Referer")
 			println(requestURL)
-			if requestURL == currentServersSettings.ServerHost.Host+"newroom" {
+			if requestURL == currentServerSettings.ServerHost.ExternalHostName+"newroom" {
 
-				w.Write([]byte(requestURL))
+				w.Write([]byte(requestURL)) //ПЕРЕСМОТРЕТЬ ПРОВЕРКУ! ВОЗМОЖНО ПРОСТО УБРАТЬ! ТАК КАК ОТКРЫТИЕ ССЫЛКИ КОМНТА НЕ ПОД ЗАЛОГИНЕННЫМ ПОЛЬЗОВАТЕЛЕМ, ПЕРЕБРАСЫВАЕТ НА ГЛАВНУЮ
+			} else {
+				fmt.Println(currentServerSettings.ServerHost.ExternalHostName)
+				w.Write([]byte(currentServerSettings.ServerHost.ExternalHostName))
+
+				return
 			}
 			return
 		}
@@ -257,8 +247,10 @@ func newRoomHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type RoomPatternHtml struct {
-	CreatorTools   template.HTML
-	CreatorScripts template.HTML
+	CreatorTools             template.HTML
+	CreatorScripts           template.HTML
+	CreatorStyles            template.HTML
+	WebSocketExternalAddress template.HTML
 }
 
 /*Метод отображения приглашения входа в комнату*/
@@ -283,32 +275,40 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if resultCheckCookie {
+		roomPatterns := RoomPatternHtml{
+			WebSocketExternalAddress: template.HTML(currentServerSettings.ServerHost.WebSocketExternalAddress),
+		}
+
 		if creatorOrUser == "Creator" {
 			creatorToolsDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorTools.html")
 			if err != nil {
 				fmt.Println(err)
 			}
 			creatorScriptsDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorRoomScripts.html")
-			roomPatterns := RoomPatternHtml{
-				CreatorTools:   template.HTML(creatorToolsDataFile),
-				CreatorScripts: template.HTML(creatorScriptsDataFile),
+			if err != nil {
+				fmt.Println(err)
 			}
+			creatorStylesDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorStyles.html")
+			if err != nil {
+				fmt.Println(err)
+			}
+			roomPatterns.CreatorTools = template.HTML(creatorToolsDataFile)
+			roomPatterns.CreatorScripts = template.HTML(creatorScriptsDataFile)
+			roomPatterns.CreatorStyles = template.HTML(creatorStylesDataFile)
 
 			tmpl, _ := template.ParseFiles("templates/room.html")
 			tmpl.Execute(w, roomPatterns)
 			return
 		} else {
 			tmpl, _ := template.ParseFiles("templates/room.html")
-			tmpl.Execute(w, nil)
+			tmpl.Execute(w, roomPatterns)
 			return
 		}
-
 	} else {
 		tmpl, _ := template.ParseFiles("templates/loginForm.html")
 		tmpl.Execute(w, nil)
 		return
 	}
-	return
 }
 
 func checkAuth(nextHandler http.HandlerFunc) http.HandlerFunc {
@@ -415,7 +415,7 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if resultCheck == "Succsess" {
 			w.Write([]byte(resultCheck))
-			go func(ss ServerPlanningPoker.ServersSettings) {
+			go func(ss *PlanningPokerSettings.ServerSettings) {
 				from := ss.SmtpServer.LoginHost
 				to := "romaphilomela@yandex.ru"
 				host := ss.SmtpServer.Host
@@ -430,7 +430,7 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 					fmt.Println("Error SendMail: ", err)
 				}
 				fmt.Println("Email Sent!") //Перепроверить отправку сообщений
-			}(currentServersSettings)
+			}(currentServerSettings)
 			return
 		} else {
 			w.Write([]byte(resultCheck))
@@ -440,6 +440,12 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pass or email or login was empty"))
 		return
 	}
+}
+
+func unknownroomHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ := template.ParseFiles("templates/unknownRoom.html")
+	tmpl.Execute(w, nil)
+	return
 }
 
 func registrationFormHandler(w http.ResponseWriter, r *http.Request) {

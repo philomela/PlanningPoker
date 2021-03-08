@@ -28,6 +28,8 @@ func NewChangesViewModel() *ChangesViewModel {
 	ChangesViewModelOut.Changes["ChangeGetVM"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
 	ChangesViewModelOut.Changes["StartVoting"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
 	ChangesViewModelOut.Changes["StopVoting"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+	ChangesViewModelOut.Changes["FinishPlanning"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+
 	return &ChangesViewModelOut
 }
 

@@ -1,4 +1,4 @@
-package ServerPlanningPoker
+package PlanningPokerSettings
 
 import (
 	"database/sql"

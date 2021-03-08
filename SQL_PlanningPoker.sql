@@ -37,6 +37,7 @@ CREATE TABLE ServerPlanningPoker.Rooms(
     Id INT PRIMARY KEY IDENTITY,
     NameRoom VARCHAR(200) NOT NULL,
     Created DATETIME2,
+    Deleted DATETIME2,
     IsActive BIT,
     Creator INT NOT NULL,
     [GUID] VARCHAR(36) UNIQUE
@@ -97,11 +98,24 @@ GO
 
 CREATE TABLE ServerPlanningPoker.TasksResults(
     Id INT PRIMARY KEY IDENTITY,
-    Median TINYINT NOT NULL,
+    Median DECIMAL(9,2),
     DateCreated DATETIME2 NOT NULL,
     TaskId INT UNIQUE NOT NULL REFERENCES ServerPlanningPoker.Tasks (Id),
     RoomId INT NOT NULL REFERENCES ServerPlanningPoker.Rooms (Id) ON DELETE CASCADE
 )
+GO
+
+CREATE TABLE ServerPlanningPoker.Scores_Dictionary (
+    Id INT PRIMARY KEY IDENTITY,
+    Score INT NOT NULL,
+    [Decryption] VARCHAR(300)
+)
+GO
+
+INSERT INTO ServerPlanningPoker.Scores_Dictionary(Score, [Decryption])
+        VALUES(999, 'Coffee break')
+              ,(777, 'Question')
+              ,(0, 'Not voice')
 GO
 
 /*Процедура добавление нового пользователя*/
@@ -231,15 +245,19 @@ GO
 /*Процедура получения View Model*/
 CREATE PROCEDURE [Build_First_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
     AS
-        SET @xmlVMOut = (SELECT (SELECT P.LoginName AS '@UserName',
+        SET @xmlVMOut = ISNULL((SELECT (SELECT P.LoginName AS '@UserName',
                                         (ROW_NUMBER() OVER (ORDER BY P.Id ASC)) AS '@Id' 
                                 FROM ServerPlanningPoker.Persons AS P
                                 WHERE P.Id IN (SELECT C.PersonId FROM ServerPlanningPoker.Connections AS C WHERE C.RoomId = @roomId)
                                 FOR XML PATH ('Person'), TYPE ) AS Persons,
                                 (SELECT (ROW_NUMBER() OVER (ORDER BY T.Id ASC)) AS '@Id',
                                         T.Name AS '@NameTask',
+                                        T.Completed AS '@Completed',
                                         T.OnActive AS '@IsCurrentActive',
                                         T.TimeDiscussion AS '@TimeDiscussion',
+                                        (SELECT Median
+                                        FROM ServerPlanningPoker.TasksResults
+                                        WHERE RoomId = @RoomId AND TaskId = T.Id) AS '@Median',
                                         (SELECT ROW_NUMBER() OVER (ORDER BY V.PersonId ASC) AS '@PersonId',
                                                 V.Vote AS '@Vote',
                                                 V.Score AS '@Score'
@@ -251,8 +269,8 @@ CREATE PROCEDURE [Build_First_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
                                 FOR XML PATH ('Task'), TYPE) AS Tasks,
                                 R.NameRoom
                         FROM ServerPlanningPoker.Rooms AS R
-                     WHERE R.Id = @roomId
-                     FOR XML RAW ('Room'), TYPE);
+                     WHERE R.Id = @roomId AND R.IsActive = 1
+                     FOR XML RAW ('Room'), TYPE), (SELECT 'UnknownRoom' AS 'Error' FOR XML RAW ('Room'), TYPE));
 GO
 
 /*Процедура проверки пользователя*/
@@ -315,7 +333,7 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                                                 WHERE RoomId = @RoomId AND OnActive = 1)
 
                         UPDATE ServerPlanningPoker.Votes
-                        SET Score = @Score, Vote = 1
+                        SET Score = @Score, Vote = @Vote
                         WHERE RoomId = @RoomId AND PersonId = @PersonId AND TaskId = @TaskId;
                         
                         EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT;
@@ -342,7 +360,7 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                             WHERE RoomId = @RoomId AND Id = (SELECT Id 
                                                                 FROM tasksTable 
                                                                     WHERE RowId = (SELECT TOP(1) C.value('@taskId', 'INT')
-                                                                                        FROM @xmlChanges.nodes('/Change/StartVoting') T(C)));
+                                                                                        FROM @xmlChanges.nodes('/Change/StartVoting') T(C)))
 
                         EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
@@ -355,28 +373,37 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                                 WHERE RoomId = @RoomId AND OnActive = 1;
                         
                         INSERT INTO ServerPlanningPoker.TasksResults(Median, DateCreated, TaskId, RoomId)
-                        VALUES (SELECT TOP(1) PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY Score)
+                        VALUES ((SELECT TOP(1) PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY Score)
                                                             OVER (PARTITION BY RoomId) AS Median
                                     FROM ServerPlanningPoker.Votes 
                                         WHERE TaskId = (SELECT TOP(1) Id 
                                                             FROM ServerPlanningPoker.Tasks 
                                                                 WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC)
+                                            AND Score NOT IN (SELECT Score FROM ServerPlanningPoker.Scores_Dictionary))
+                                            --AND Vote = 1)
                                 ,CURRENT_TIMESTAMP
-                                ,SELECT TOP(1) Id 
+                                ,(SELECT TOP(1) Id 
                                     FROM ServerPlanningPoker.Tasks
-                                        WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC 
-                                ,
-                                )
-                        
+                                        WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC)
+                                ,@RoomId
+                                ) 
 
-                        SELECT * FROM ServerPlanningPoker.Rooms WHERE Id = 16
-                        SELECT * FROM ServerPlanningPoker.Tasks WHERE RoomId = 16
-                        SELECT * FROM ServerPlanningPoker.Votes WHERE RoomId = 16 AND TaskId = 18
+                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
+                        SELECT @xmlOut;
+                    END
+                ELSE IF @nameChanges = 'FinishPlanning'
+                    BEGIN
+                        
+                        UPDATE ServerPlanningPoker.Rooms 
+                        SET Deleted = CURRENT_TIMESTAMP,
+                            IsActive = 0
+                        WHERE Id = @RoomId
 
                         EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
                     END
                 COMMIT;
+
             END TRY
 
             BEGIN CATCH
@@ -386,6 +413,8 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
 GO
 
 SELECT * FROM ServerPlanningPoker.Votes ORDER BY RoomId DESC
+SELECT * FROM ServerPlanningPoker.TasksResults ORDER BY 1 DESC
+DELETE FROM ServerPlanningPoker.TasksResults
 
 SELECT 
 INSERT INTO ServerPlanningPoker.Persons(LoginName, Email, [Password], Token) 
@@ -441,6 +470,8 @@ DROP TABLE ServerPlanningPoker.Connections
 DROP TABLE ServerPlanningPoker.ViewModels
 DROP TABLE ServerPlanningPoker.Persons
 DROP TABLE ServerPlanningPoker.Sessions
+DROP TABLE ServerPlanningPoker.TasksResults
+DROP TABLE ServerPlanningPoker.Scores_Dictionary
 DROP PROCEDURE u0932131_admin.NewPlanningPokerRoom
 DROP PROCEDURE u0932131_admin.Add_User
 DROP PROCEDURE u0932131_admin.CreateConnection
@@ -469,3 +500,48 @@ INSERT INTO TestTable_01 VALUE ()
 SELECT * FROM TestTable_01
 
 DELETE FROM ServerPlanningPoker.Persons
+
+SELECT * FROM ServerPlanningPoker.Persons
+
+
+DECLARE @UserName VARCHAR(30)
+
+
+SELECT @Age = 1 
+SELECT @Age
+
+
+DECLARE @Age INT
+SELECT TOP(1) @Age = Id FROM ServerPlanningPoker.Tasks WHERE RoomId = 14
+SELECT @Age
+
+SELECT * FROM ServerPlanningPoker.Scores_Dictionary
+SELECT * FROM ServerPlanningPoker.Persons
+
+
+SELECT TOP(1) IIF((ROW_NUMBER(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY Score)
+                                                            OVER (PARTITION BY RoomId)) = 0, 5, 2) AS Median 
+                                    FROM ServerPlanningPoker.Votes 
+                                        WHERE TaskId = (SELECT TOP(1) Id 
+                                                            FROM ServerPlanningPoker.Tasks 
+                                                                WHERE Id =122 ORDER BY Id DESC)
+                                            AND Score NOT IN (SELECT Score FROM ServerPlanningPoker.Scores_Dictionary)
+                                            
+
+                                            select * from ServerPlanningPoker.Rooms ORDER BY 1 DESC
+
+
+                                            SELECT * FROM ServerPlanningPoker.Votes 
+                                        WHERE TaskId IN (SELECT Id 
+                                                            FROM ServerPlanningPoker.Tasks 
+                                                                WHERE RoomId = 44 )
+                                                    SELECT *
+                                                            FROM ServerPlanningPoker.Tasks 
+                                                                WHERE RoomId = 44
+
+
+                                                                SELECT * FROM ServerPlanningPoker.TasksResults ORDER BY 1 DESC
+
+
+
+SELECT * FROM ServerPlanningPoker.Tasks ORDER BY 1 DESC

@@ -6,19 +6,35 @@ header {
     
 }
 main {
+    position: relative;
+    z-index: 1;
     background: url('/templates/img/igralnye-kosti.png');
     background-size: cover;
-    
-    background-color: #48173e;
-    
+    --background-image: url('/templates/img/igralnye-kosti.png');
+    --background-color: #48173e; 
+}
+main:after {
+    position: absolute;
+    z-index: 2;
+    content: '';
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    --background-image: url('/templates/img/igralnye-kosti.png');
+    background-size: cover;
+    background: linear-gradient(to top left, rgba(30, 90, 165, 0.3), rgba(109, 14, 88, 0.3));
+    --background-color: #48173e; 
 }
 .main-slide {
     height: 350px;
 }
 .left-main-block {
+    z-index: 3;  
     color: #FCF8FF;
 }
 .right-main-block {
+    z-index: 3;
     color: #FCF8FF;
 }
 .controls-block {
@@ -64,45 +80,104 @@ footer {
 
 .main-room {
     --background-color: bisque;
-    border-left: 1px solid black;
-    border-right: 1px solid black;
-    height: 500px;
+    --border-left: 1px solid black;
+    --border-right: 1px solid black;
+    --height: 500px;
 }
 
-canvas {
-    height: 320px;
-    width: 480px;
+.name-room {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.results-voting, tr, td {
+    font-size: 12px; 
+    color: white;
+}
+
+
+tr, td {
+    border: 1px solid black;
+    padding: 3px 10px 3px 10px;
+}
+
+.name-left-menu {
+    background-color: #6a155d;
+    color: white;
+}
+
+.name-right-menu {
+    background-color: #4d387e;
+    color: white;
+}
+
+.name-left-menu, .name-results-menu, .name-right-menu {
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px;
 }
 
 .left-menu-room {
     --background-color: bisque;
-    height: 500px;
+    font-size: 12px;
+    --height: 500px;
+    box-shadow: 20px 0px 20px rgba(0,0,0,0.25);
 }
 
 .right-menu-room {
     --background-color: blue;
     list-style-type: none;
-    height: 500px;
+    --height: 500px;
+    box-shadow: -20px 0px 20px rgba(0,0,0,0.25);
 }
 .right-menu-room ul {
     padding: 0;
 }
 
 .right-menu-room li {
+    font-size: 12px;
     list-style-type: none;
-    padding: 0;
+    padding: 3px;
+}
+
+.footer-container-results {
+    margin-top: 20px; 
+    --background: url(/templates/img/footer-pattern.png) #52113c;
+    background: linear-gradient(to top left, #1e5aa5, #6d0e58);
+    box-shadow: 0 -8px 15px rgba(0,0,0,0.35);
+    --background-color: #52113c;
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 .task-room {
-    border: 1px solid black;
-    border-radius: 10px;
+    --border: 1px solid black;
+    --border-radius: 10px;
     margin-bottom: 5px;
     display: inline-block;
+    width: 80%;
+}
+
+.tsk-tb {
+    --background-color: #52113c;
+}
+
+.tsk-tb-nested {
+    --background-color: #4e2540;
+}
+
+#tb-results {
     width: 100%;
 }
 
+.user-name-text-right-menu {
+    margin-left: 15px;
+}
+
 .is-current-active-1 {
+    color: white;
     background-color: #40AA29;
+    padding: 3px;
 }
 
 .is-current-active-0 {
@@ -120,24 +195,109 @@ canvas {
 }
 
 .button-room {
-    width: 100px;
-    height: 300px;
+    --width: 100px;
+    --height: 300px;
+    background-color: white;
+    border-radius: 10px;
+    border: none;
+    margin-top: 8px;
+    box-shadow: -10px 0px 20px rgba(0,0,0,0.25);
 }
 
 .start-voting-btn {
     background-color: #40AA29;
-    border-radius: 8px;
+    border-radius: 3px;
     border: none;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
 }
 
 .finish-voting-btn {
     --width: 100px;
-    border-radius: 8px;
+    background-color: red;
+    border-radius: 3px;
     border: none;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
 }
 
 .finish-planning-btn {
     --width: 100px;
-    --border-radius: 8px;
+    --border-radius: 3px;
     border: none;
+    background-color: #4f357c;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+}
+
+.name-left-menu span {
+    display: inline-block;
+    width: 90%
+}
+
+.name-left-menu  i {
+    display: inline-block;
+    width: 10%
+}
+
+.name-right-menu span {
+    display: inline-block;
+    width: 90%
+}
+
+.name-right-menu  i {
+    display: inline-block;
+    width: 10%
+}
+
+.how-it-works {
+    color: white;
+    background: linear-gradient(to top left, #1e5aa5, #6d0e58);
+}
+
+.enter-room {
+    padding: 0px !important;
+    position: relative;
+    z-index: 1;
+    background-image: url(/templates/img/rooms-backgrounds.png);
+    background-size: cover;
+    padding-bottom: 30%;
+}
+
+.enter-room:after  {
+    z-index: 2;
+    content: '';
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    background: linear-gradient(to top left, rgba(30, 90, 165, 0.9), rgba(58, 12, 48, 0.9));
+    background-size: cover;
+}
+
+.enter-the-room h1 {
+    position: relative;
+    color: white;
+    z-index: 3;
+    top: 150;
+    --left:20%;
+}
+
+.enter-the-room h3 a {
+    color: white;
+    z-index: 3;
+    position: relative;
+    top: 170;
+    text-decoration: underline;
+}
+
+
+
+.enter-text-room {
+    position: relative;
+    --margin-top: 30%;
 }
