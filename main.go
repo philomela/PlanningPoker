@@ -54,13 +54,13 @@ func main() {
 	//eventSthutdown := make(chan string)
 	router := mux.NewRouter()
 	router.HandleFunc("/unknownroom", unknownroomHandler).Methods("GET")
-	router.HandleFunc("/rooms", roomsHandler).Methods("GET")
+	router.HandleFunc("/rooms", checkAuth(roomsHandler)).Methods("GET")
 	router.HandleFunc("/loginform", loginFormHandler).Methods("GET")
 	router.HandleFunc("/create-room", createRoomHandler).Methods("POST")
 	router.HandleFunc("/newroom", newRoomHandler).Methods("GET")
 	router.HandleFunc("/login", loginHandler).Methods("POST")
 	router.HandleFunc("/echo", echoSocket).Methods("GET")
-	router.HandleFunc("/room", roomHandler).Methods("GET")
+	router.HandleFunc("/room", checkAuth(roomHandler)).Methods("GET")
 	router.HandleFunc("/registrationform", registrationFormHandler).Methods("GET")
 	router.HandleFunc("/registration", registrationHandler).Methods("POST")
 	router.HandleFunc("/", indexHandler).Methods("GET")
@@ -311,10 +311,17 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//Middleware для аутентификации, вынести логику аутентификации сюда.
 func checkAuth(nextHandler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//Middleware для аутентификации, вынести логику аутентификации сюда.
-		nextHandler(w, r)
+		resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
+		if resultCheckCookie {
+			nextHandler(w, r)
+		} else {
+			http.Redirect(w, r, "/loginform", 301)
+			return
+		}
+
 	}
 }
 
