@@ -8,9 +8,7 @@ import (
 )
 
 type SessionsTool struct {
-	sessionStore   *sessions.CookieStore
-	currentSession *sessions.Session
-	currError      error
+	sessionStore *sessions.CookieStore
 }
 
 func InitSessionsTool() *SessionsTool {
@@ -27,9 +25,11 @@ func (s *SessionsTool) CreateNewSession(loginUser string, r *http.Request, w *ht
 }
 
 func (s *SessionsTool) CheckAndUpdateSession(r *http.Request, w *http.ResponseWriter) bool {
-	currentSession, _ := s.sessionStore.Get(r, "session")
-
-	fmt.Println(currentSession)
+	currentSession, err := s.sessionStore.Get(r, "session")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(currentSession.Values["UserLogin"])
 	untyped, ok := currentSession.Values["UserLogin"]
 	if !ok {
 		return false

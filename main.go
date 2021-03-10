@@ -54,7 +54,7 @@ func main() {
 	//eventSthutdown := make(chan string)
 	router := mux.NewRouter()
 	router.HandleFunc("/unknownroom", unknownroomHandler).Methods("GET")
-	router.HandleFunc("/rooms", checkAuth(roomsHandler)).Methods("GET")
+	router.HandleFunc("/rooms", checkAuth(roomsHandler)).Queries("roomId", "")
 	router.HandleFunc("/loginform", loginFormHandler).Methods("GET")
 	router.HandleFunc("/create-room", createRoomHandler).Methods("POST")
 	router.HandleFunc("/newroom", newRoomHandler).Methods("GET")
@@ -97,11 +97,7 @@ func main() {
 
 /*Метод проверки существования комнаты по id*/
 func roomsHandler(w http.ResponseWriter, r *http.Request) {
-	resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
-	println(resultCheckCookie)
-	if !resultCheckCookie {
-		return //Проверка сессии в cookie
-	}
+
 	roomId := r.URL.Query()["roomId"][0]
 	if len(roomId) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -223,8 +219,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 /*Метод отображения формы входа*/
 func loginFormHandler(w http.ResponseWriter, r *http.Request) {
-
-	http.ServeFile(w, r, "templates/loginForm.html")
+	tmpl, _ := template.ParseFiles("templates/loginForm.html")
+	tmpl.Execute(w, nil)
+	return
 }
 
 /*Метод отображения страницы создания комнаты*/
@@ -256,7 +253,6 @@ type RoomPatternHtml struct {
 /*Метод отображения приглашения входа в комнату*/
 func roomHandler(w http.ResponseWriter, r *http.Request) {
 	var creatorOrUser string
-	resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
 	userName := sessionsTool.GetUserLoginSession(r)
 	roomUID := r.URL.Query()["roomId"][0]
 
@@ -274,39 +270,33 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if resultCheckCookie {
-		roomPatterns := RoomPatternHtml{
-			WebSocketExternalAddress: template.HTML(currentServerSettings.ServerHost.WebSocketExternalAddress),
-		}
+	roomPatterns := RoomPatternHtml{
+		WebSocketExternalAddress: template.HTML(currentServerSettings.ServerHost.WebSocketExternalAddress),
+	}
 
-		if creatorOrUser == "Creator" {
-			creatorToolsDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorTools.html")
-			if err != nil {
-				fmt.Println(err)
-			}
-			creatorScriptsDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorRoomScripts.html")
-			if err != nil {
-				fmt.Println(err)
-			}
-			creatorStylesDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorStyles.html")
-			if err != nil {
-				fmt.Println(err)
-			}
-			roomPatterns.CreatorTools = template.HTML(creatorToolsDataFile)
-			roomPatterns.CreatorScripts = template.HTML(creatorScriptsDataFile)
-			roomPatterns.CreatorStyles = template.HTML(creatorStylesDataFile)
-
-			tmpl, _ := template.ParseFiles("templates/room.html")
-			tmpl.Execute(w, roomPatterns)
-			return
-		} else {
-			tmpl, _ := template.ParseFiles("templates/room.html")
-			tmpl.Execute(w, roomPatterns)
-			return
+	if creatorOrUser == "Creator" {
+		creatorToolsDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorTools.html")
+		if err != nil {
+			fmt.Println(err)
 		}
+		creatorScriptsDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorRoomScripts.html")
+		if err != nil {
+			fmt.Println(err)
+		}
+		creatorStylesDataFile, err := ioutil.ReadFile("templates/creatorPatterns/creatorStyles.html")
+		if err != nil {
+			fmt.Println(err)
+		}
+		roomPatterns.CreatorTools = template.HTML(creatorToolsDataFile)
+		roomPatterns.CreatorScripts = template.HTML(creatorScriptsDataFile)
+		roomPatterns.CreatorStyles = template.HTML(creatorStylesDataFile)
+
+		tmpl, _ := template.ParseFiles("templates/room.html")
+		tmpl.Execute(w, roomPatterns)
+		return
 	} else {
-		tmpl, _ := template.ParseFiles("templates/loginForm.html")
-		tmpl.Execute(w, nil)
+		tmpl, _ := template.ParseFiles("templates/room.html")
+		tmpl.Execute(w, roomPatterns)
 		return
 	}
 }
@@ -315,10 +305,11 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 func checkAuth(nextHandler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
+		fmt.Println(resultCheckCookie)
 		if resultCheckCookie {
 			nextHandler(w, r)
 		} else {
-			http.Redirect(w, r, "/loginform", 301)
+			http.Redirect(w, r, "/loginform", http.StatusTemporaryRedirect)
 			return
 		}
 
