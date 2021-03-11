@@ -14,10 +14,12 @@ type ServerSettings struct {
 }
 
 type ServerHost struct {
+	Protocol                 string
 	Host                     string
 	Port                     string
 	InternalHostName         string
 	ExternalHostName         string
+	ExternalPathToLoginForm  string
 	Room                     string
 	WebSocketProtocol        string
 	WebSocketExternalAddress string
@@ -44,7 +46,7 @@ func (s *ServerSettings) InitSettingFromLocalFile() {
 
 	if err != nil {
 		fmt.Println(err)
-		return //Добавить реализацию логирования ошибок в базу
+		return
 	} else {
 		byteArrayJsonSettings, _ := ioutil.ReadAll(jsonFile)
 		json.Unmarshal(byteArrayJsonSettings, s)
@@ -54,11 +56,12 @@ func (s *ServerSettings) InitSettingFromLocalFile() {
 func (s *ServerSettings) InitSettingFromEnvVariables(envParam string) {
 	switch envParam {
 	case "docker":
-		s.ServerHost.Host = os.Getenv("PLANNING_POKER_PROTOCOL")
+		s.ServerHost.Protocol = os.Getenv("PLANNING_POKER_PROTOCOL")
 		s.ServerHost.Host = os.Getenv("PLANNING_POKER_HOST")
 		s.ServerHost.Port = os.Getenv("PLANNING_POKER_PORT")
 		s.ServerHost.InternalHostName = os.Getenv("PLANNING_POKER_INTERNALHOSTNAME")
 		s.ServerHost.ExternalHostName = os.Getenv("PLANNING_POKER_EXTERNALHOSTNAME")
+		s.ServerHost.ExternalPathToLoginForm = os.Getenv("PLANNING_POKER_EXT_PATH_LOGINFROM")
 		s.ServerHost.WebSocketProtocol = os.Getenv("PLANNING_POKER_WEBSOCKET_PROTOCOL")
 		s.ServerHost.WebSocketExternalAddress = os.Getenv("PLANNING_POKER_WEBSOCKET_EXTERNALADDRESS")
 	}

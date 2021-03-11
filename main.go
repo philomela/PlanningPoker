@@ -31,10 +31,6 @@ var conns []RoomInteraction.Connection
 
 type connections []*websocket.Conn
 
-//var rooms []Room //Коллекция комнат, вынести в отдельный пакет
-//collectionRoom := make(map[string]connections)
-/* Открываем, читаем и парсим json */
-
 var sessionsTool = Sessions.InitSessionsTool()
 
 var currentSqlServer *sql.DB
@@ -47,20 +43,20 @@ var upgrader = websocket.Upgrader{
 
 const (
 	cookieName = "sessionId"
+	lengthGUID = 36
 )
 
 func main() {
-
-	//eventSthutdown := make(chan string)
 	router := mux.NewRouter()
 	router.HandleFunc("/unknownroom", unknownroomHandler).Methods("GET")
-	router.HandleFunc("/rooms", checkAuth(roomsHandler)).Queries("roomId", "")
-	router.HandleFunc("/loginform", loginFormHandler).Methods("GET")
-	router.HandleFunc("/create-room", createRoomHandler).Methods("POST")
-	router.HandleFunc("/newroom", newRoomHandler).Methods("GET")
+	router.HandleFunc("/bad-request", badRequestHandler).Methods("GET")
+	router.HandleFunc("/rooms", checkAuthMiddleware(roomsHandler)).Queries("roomId", "")
+	router.HandleFunc("/loginform", checkAuthMiddleware(loginFormHandler)).Methods("GET")
+	router.HandleFunc("/create-room", checkAuthMiddleware(createRoomHandler)).Methods("POST")
+	router.HandleFunc("/newroom", checkAuthMiddleware(newRoomHandler)).Methods("GET")
 	router.HandleFunc("/login", loginHandler).Methods("POST")
 	router.HandleFunc("/echo", echoSocket).Methods("GET")
-	router.HandleFunc("/room", checkAuth(roomHandler)).Methods("GET")
+	router.HandleFunc("/room", checkAuthMiddleware(roomHandler)).Methods("GET")
 	router.HandleFunc("/registrationform", registrationFormHandler).Methods("GET")
 	router.HandleFunc("/registration", registrationHandler).Methods("POST")
 	router.HandleFunc("/", indexHandler).Methods("GET")
@@ -69,9 +65,6 @@ func main() {
 	currentSqlServer, err = PlanningPokerSettings.ServerSql{DSN: currentServerSettings.SQLServer.DSN, TypeSql: currentServerSettings.SQLServer.TypeSql}.OpenConnection()
 
 	fmt.Println("Server succsesful configured. ©Roman Solovyev")
-
-	//APP_IP := os.Getenv("APP_IP")
-	//APP_PORT := os.Getenv("APP_PORT")
 
 	fmt.Println("Server started on:" + currentServerSettings.ServerHost.Host + currentServerSettings.ServerHost.Port)
 	server := &http.Server{Addr: currentServerSettings.ServerHost.Host + currentServerSettings.ServerHost.Port, Handler: router}
@@ -83,6 +76,7 @@ func main() {
 		}
 	}()
 	fmt.Println("To stop the server enter the command: stop")
+
 	var key string
 	for {
 		_, err = fmt.Scan(&key)
@@ -97,157 +91,94 @@ func main() {
 
 /*Метод проверки существования комнаты по id*/
 func roomsHandler(w http.ResponseWriter, r *http.Request) {
-
 	roomId := r.URL.Query()["roomId"][0]
-	if len(roomId) == 0 {
+	if len(roomId) != lengthGUID {
 		w.WriteHeader(http.StatusBadRequest)
-		//http.Error(w, "Bad Request", http.StatusBadRequest)
-		//http.ServeFile(w, r, "templates/error_bad_request.html") //реализовать вызов методов страниц ошибок
-		return //Реализовать обертку для ошибок
+		return
 	}
-	success := "false"
 
 	resultSQL, err := currentSqlServer.Query("SELECT 'true' WHERE EXISTS (SELECT [GUID] FROM ServerPlanningPoker.Rooms WHERE [GUID] = '" + roomId + "')")
 	defer resultSQL.Close()
 	if err != nil {
 		log.Println(err)
 	}
+
+	var successFindRoom string
 	for resultSQL.Next() {
-		err := resultSQL.Scan(&success)
+		err := resultSQL.Scan(&successFindRoom)
 		if err != nil {
 			fmt.Println(err)
-			continue //Добавить реализацию логирования ошибок в базу
 		}
 	}
+
 	type ViewData struct {
-		Success     string
 		RoomId      string
 		CurrentHost string
 	}
 	data := ViewData{
-		Success:     success,
 		RoomId:      roomId,
 		CurrentHost: currentServerSettings.ServerHost.ExternalHostName,
 	}
-	fmt.Println(roomId)
-	fmt.Println(success)
-	if success == "true" {
 
+	if successFindRoom == "true" {
 		tmpl, _ := template.ParseFiles("templates/rooms.html")
 		tmpl.Execute(w, data)
 	}
+	return
 }
 
 /*Метод создания новой комнаты с задачами*/
 func createRoomHandler(w http.ResponseWriter, r *http.Request) {
-	resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
-	if !resultCheckCookie {
-		http.Redirect(w, r, "/login", 301)
-		return //Добавить сообщение не авторизованного пользователя
-	}
 	userLogin := sessionsTool.GetUserLoginSession(r)
 	nameRoom := r.FormValue("nameRoom")
 	xmlTasks := r.FormValue("xmlTasks")
 	if len(nameRoom) == 0 && len(xmlTasks) == 0 {
-		http.ServeFile(w, r, "templates/error_bad_request.html") //реализовать вызов методов страниц ошибок
+		http.Redirect(w, r, "/bad-request", 301)
 		return
 	}
-	var roomId string
-	fmt.Println(nameRoom)
-	fmt.Println(xmlTasks)
 
 	resultSP, err := currentSqlServer.Query(`EXEC [NewPlanningPokerRoom] @NameRoom=?, @Tasks=?, @Creator=?;`, nameRoom, xmlTasks, userLogin)
-
 	if err != nil {
 		log.Println(err)
 	}
-	var hello string
+
+	var newGUIDRoom string
 	for resultSP.Next() {
-		err := resultSP.Scan(&hello)
+		err := resultSP.Scan(&newGUIDRoom)
 		if err != nil {
 			fmt.Println(err)
-			continue //Добавить реализацию логирования ошибок в базу
 		}
 	}
-	w.Write([]byte(currentServerSettings.ServerHost.ExternalHostName + currentServerSettings.ServerHost.Room + strings.ToLower(hello)))
-	fmt.Println(resultSP)
-	fmt.Println(hello)
-	fmt.Println(roomId)
-	fmt.Println(hello)
-	fmt.Println(hello)
+	w.Write([]byte(currentServerSettings.ServerHost.ExternalHostName + currentServerSettings.ServerHost.Room + strings.ToLower(newGUIDRoom)))
+	return
 }
 
 /*Метод входа пользователей*/
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	login := r.FormValue("loginUser")
 	password := r.FormValue("password")
-	//Проверки логин/пароль
 	if len(login) > 0 && len(password) > 0 {
 		resultSP, err := currentSqlServer.Query(`EXEC [CheckUser] ?, ?`, login, password)
 		if err != nil {
 			log.Println(err)
 		}
-		var resultCkeck bool
+		var resultCkeckUser bool
 		for resultSP.Next() {
-			err := resultSP.Scan(&resultCkeck)
-			fmt.Println(resultCkeck)
+			err := resultSP.Scan(&resultCkeckUser)
 			if err != nil {
 				fmt.Println(err)
-				continue //Добавить реализацию логирования ошибок в базу
 			}
 		}
-		if resultCkeck {
-
+		if resultCkeckUser {
 			sessionsTool.CreateNewSession(login, r, &w)
-			requestURL := r.Header.Get("Referer")
-			println(requestURL)
-			if requestURL == currentServerSettings.ServerHost.ExternalHostName+"newroom" {
-
-				w.Write([]byte(requestURL)) //ПЕРЕСМОТРЕТЬ ПРОВЕРКУ! ВОЗМОЖНО ПРОСТО УБРАТЬ! ТАК КАК ОТКРЫТИЕ ССЫЛКИ КОМНТА НЕ ПОД ЗАЛОГИНЕННЫМ ПОЛЬЗОВАТЕЛЕМ, ПЕРЕБРАСЫВАЕТ НА ГЛАВНУЮ
-			} else {
-				fmt.Println(currentServerSettings.ServerHost.ExternalHostName)
+			if r.Header.Get("Referer") == currentServerSettings.ServerHost.ExternalPathToLoginForm {
 				w.Write([]byte(currentServerSettings.ServerHost.ExternalHostName))
-
-				return
 			}
 			return
 		}
 	}
-
 	w.Write([]byte("Wrong"))
-}
-
-/*Метод отображения формы входа*/
-func loginFormHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, _ := template.ParseFiles("templates/loginForm.html")
-	tmpl.Execute(w, nil)
 	return
-}
-
-/*Метод отображения страницы создания комнаты*/
-func newRoomHandler(w http.ResponseWriter, r *http.Request) {
-	resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
-
-	fmt.Println(resultCheckCookie)
-
-	if resultCheckCookie {
-		tmpl, _ := template.ParseFiles("templates/newPlanningPokerRoom.html")
-		tmpl.Execute(w, nil)
-		return
-
-	} else {
-		tmpl, _ := template.ParseFiles("templates/loginForm.html")
-		tmpl.Execute(w, nil)
-		return
-	}
-
-}
-
-type RoomPatternHtml struct {
-	CreatorTools             template.HTML
-	CreatorScripts           template.HTML
-	CreatorStyles            template.HTML
-	WebSocketExternalAddress template.HTML
 }
 
 /*Метод отображения приглашения входа в комнату*/
@@ -262,15 +193,12 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for resultSP.Next() {
 		err := resultSP.Scan(&creatorOrUser)
-		fmt.Println(creatorOrUser)
-		fmt.Println(roomUID)
 		if err != nil {
 			fmt.Println(err)
-			continue //Добавить реализацию логирования ошибок в базу
 		}
 	}
 
-	roomPatterns := RoomPatternHtml{
+	roomPatterns := RoomInteraction.RoomPatternHtml{
 		WebSocketExternalAddress: template.HTML(currentServerSettings.ServerHost.WebSocketExternalAddress),
 	}
 
@@ -301,21 +229,6 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//Middleware для аутентификации, вынести логику аутентификации сюда.
-func checkAuth(nextHandler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
-		fmt.Println(resultCheckCookie)
-		if resultCheckCookie {
-			nextHandler(w, r)
-		} else {
-			http.Redirect(w, r, "/loginform", http.StatusTemporaryRedirect)
-			return
-		}
-
-	}
-}
-
 /*Метод upgare запроса до протокола WebSocket*/
 func echoSocket(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -325,21 +238,21 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 	)
 	Conn.Conn, _ = upgrader.Upgrade(w, r, nil)
 	Conn.RoomGUID = URL
-	Conn.UUID, err = uuid.NewUUID()
-	if err != nil {
-		fmt.Println(err)
-		return //Добавить реализацию логирования ошибок в базу
-	}
+	Conn.UUID, _ = uuid.NewUUID()
+
 	Conn.UserEmail = sessionsTool.GetUserLoginSession(r)
 	if len(Conn.UserEmail) < 0 {
-		http.Redirect(w, r, "/login", 301) //пересмотреть, на сокете редирект может не работать
+		http.Redirect(w, r, "/login", 301)
 		return
 	}
 
 	currentSqlServer.Query(`EXEC [CreateConnection] @UUID=?, @RoomGUID=?, @Email=?`, Conn.UUID.String(), Conn.RoomGUID, Conn.UserEmail)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	conns = append(conns, Conn)
-	println(conns)
-	println(URL)
+
 	for {
 		msgType, msg, err := Conn.Conn.ReadMessage()
 		//Добавить логику работы когда мы закрываем соединение, чтобы удалять ненужные
@@ -347,10 +260,8 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		msgConnection := string(msg)
-
 		msgConnArray := strings.Split(msgConnection, "==")
-		//msgConnValueArray := strings.Split(msgConnection, "==")
-		fmt.Println(msgConnArray)
+
 		var (
 			msgConnKey, msgConnValue string
 		)
@@ -360,32 +271,29 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 		} else if len(msgConnArray) == 1 {
 			msgConnKey = msgConnArray[0]
 		} else {
-			return //Рассмотреть детальнее обработку и филтрацию команд
+			return
 		}
 
-		fmt.Println(string(msgConnKey))
-		fmt.Println(string(msgConnValue))
-
 		commandSql := Change.GetChange(msgConnKey)
-		fmt.Println(commandSql)
 
 		resultSP, err := currentSqlServer.Query(commandSql, msgConnValue, msgConnKey, Conn.RoomGUID, Conn.UserEmail)
 		if err != nil {
 			log.Println(err)
 		}
-		var resultCkeck string
+
+		var resultSQL string
+
 		for resultSP.Next() {
-			err := resultSP.Scan(&resultCkeck)
-			fmt.Println(resultCkeck)
+			err := resultSP.Scan(&resultSQL)
 			if err != nil {
 				fmt.Println(err)
-				continue //Добавить реализацию логирования ошибок в базу
+				continue
 			}
 		}
 
 		for _, value := range conns {
 			if value.RoomGUID == URL {
-				msg = []byte(resultCkeck)
+				msg = []byte(resultSQL)
 				value.Conn.WriteMessage(msgType, msg)
 			}
 
@@ -403,16 +311,18 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
+
 		var resultCheck string
+
 		for resultSP.Next() {
 			err := resultSP.Scan(&resultCheck)
 			if err != nil {
 				fmt.Println(err)
-				continue //Добавить реализацию логирования ошибок в базу
 			}
 		}
 		if resultCheck == "Succsess" {
 			w.Write([]byte(resultCheck))
+
 			go func(ss *PlanningPokerSettings.ServerSettings) {
 				from := ss.SmtpServer.LoginHost
 				to := "romaphilomela@yandex.ru"
@@ -427,7 +337,6 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 				if err := smtp.SendMail(host+ss.SmtpServer.PortHost, auth, from, []string{to}, []byte(message)); err != nil {
 					fmt.Println("Error SendMail: ", err)
 				}
-				fmt.Println("Email Sent!") //Перепроверить отправку сообщений
 			}(currentServerSettings)
 			return
 		} else {
@@ -440,8 +349,42 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//Middleware для аутентификации, вынести логику аутентификации сюда.
+func checkAuthMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
+		if resultCheckCookie {
+			nextHandler(w, r)
+		} else {
+			tmpl, _ := template.ParseFiles("templates/loginForm.html")
+			tmpl.Execute(w, nil)
+			return
+		}
+	}
+}
+
+/*Метод отображения формы входа*/
+func loginFormHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ := template.ParseFiles("templates/loginForm.html")
+	tmpl.Execute(w, nil)
+	return
+}
+
+/*Метод отображения страницы создания комнаты*/
+func newRoomHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ := template.ParseFiles("templates/newPlanningPokerRoom.html")
+	tmpl.Execute(w, nil)
+	return
+}
+
 func unknownroomHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/unknownRoom.html")
+	tmpl.Execute(w, nil)
+	return
+}
+
+func badRequestHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ := template.ParseFiles("templates/error_bad_request.html")
 	tmpl.Execute(w, nil)
 	return
 }

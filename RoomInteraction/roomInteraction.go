@@ -1,9 +1,18 @@
 package RoomInteraction
 
 import (
+	"html/template"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
+
+type RoomPatternHtml struct {
+	CreatorTools             template.HTML
+	CreatorScripts           template.HTML
+	CreatorStyles            template.HTML
+	WebSocketExternalAddress template.HTML
+}
 
 type Connection struct {
 	Conn      *websocket.Conn

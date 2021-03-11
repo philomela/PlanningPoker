@@ -29,16 +29,15 @@ func (s *SessionsTool) CheckAndUpdateSession(r *http.Request, w *http.ResponseWr
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(currentSession.Values["UserLogin"])
+
 	untyped, ok := currentSession.Values["UserLogin"]
 	if !ok {
 		return false
 	}
-	userLogin, ok := untyped.(string)
+	_, ok = untyped.(string)
 	if !ok {
 		return false
 	}
-	fmt.Println(userLogin)
 
 	currentSession.Save(r, *w)
 	return true
@@ -47,7 +46,6 @@ func (s *SessionsTool) CheckAndUpdateSession(r *http.Request, w *http.ResponseWr
 func (s *SessionsTool) GetUserLoginSession(r *http.Request) string {
 	currentSession, _ := s.sessionStore.Get(r, "session")
 
-	fmt.Println(currentSession)
 	userLogin, ok := currentSession.Values["UserLogin"]
 	if !ok {
 		return ""

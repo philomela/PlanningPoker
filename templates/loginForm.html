@@ -93,11 +93,11 @@
       url: "../login",
       data: `loginUser=${$('#login').val()}&password=${$('#password').val()}`,
       success: function(msg){
-        if (msg != "Wrong") {
-          window.location.href = msg;
+        if (msg == "Wrong") {
+          $('#warning').text("Invalid login/password");        
         }
         else {
-          $('#warning').text("Invalid login/password");
+          window.location.href = msg;
         }     
       }});
     });
