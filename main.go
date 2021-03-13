@@ -328,7 +328,6 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 				to := "romaphilomela@yandex.ru"
 				host := ss.SmtpServer.Host
 				auth := smtp.PlainAuth("", from, ss.SmtpServer.PassHost, host)
-				fmt.Println(ss.SmtpServer.PassHost)
 				message := "To: romaphilomela@yandex.ru\r\n" +
 					"Subject: discount Gophers!\r\n" +
 					"\r\n" +

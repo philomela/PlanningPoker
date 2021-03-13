@@ -1,4 +1,5 @@
-let socketInst, currentXmlString, currentXml;
+var socketInst, currentXmlString, currentXml;
+var buttonStartVoting;
 const coffeeIcon = 999, questionIcon = 777, coffeeIconMedian = "999.00", questionIconMedian = "777.00"
 
 $.extend({
@@ -41,7 +42,14 @@ function parseXmlResponse(currentXml) {
         for (let i = 0; i < tasks.length; i++) {
                 
             if (tasks[i].getAttribute('IsCurrentActive') == 1) {
-                console.log(tasks[i].getAttribute('IsCurrentActive'));
+                
+                
+
+                $(document).ready(function() {
+                    buttonStartVoting = $(`#start-voting`).prop("disabled", true); 
+                    buttonStartVoting.css({"background": "#b3b3b3"});
+                                       
+                });
                 
                 if (countTimerStarted <= 1){
                     StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));
@@ -64,6 +72,7 @@ function parseXmlResponse(currentXml) {
                         ${tasks[i].getAttribute('TimeDiscussion')} :min</div>`).appendTo($('.tasks-left-menu-room'));
                         if (tasks[i].getAttribute('Completed') == 1){
                             $(`#task-${tasks[i].getAttribute('Id')}`).css({ "text-decoration": "line-through", "pointer-events": "none"});
+
                         }
                         var hasCurrentActive = false;
                         for (let i = 0; i < tasks.length; i++){
@@ -96,7 +105,7 @@ function parseXmlResponse(currentXml) {
                     }
                 }
             }
-            if (!timerStarted) {
+            if (!hasCurrentActive) {
                 $(`<td id="tsk-tb-median">Median:</td>`).appendTo($('#tb-results').children().last());
                 $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb-nested"><td id="tb-name-task"></tr>`).appendTo($('#tb-results'));
                 for (let j = 0; j < currPersonTasks.length; j++) {
@@ -136,8 +145,6 @@ function parseXmlResponse(currentXml) {
         }
 
     }
-
-    console.log(persons);
 }
 
 var timerStarted = false;
@@ -172,14 +179,6 @@ $(document).on('click', '.button-room', (e) => {
     console.log(e.target)
     console.log(e.target.id.split('-')[1])
 });
-
-$('#yellow').click(() => {
-    SendColor('yellow')
-});
-$('#green').click(() => {
-    SendColor('green')
-});
-
 
 createWebSocket();
 
