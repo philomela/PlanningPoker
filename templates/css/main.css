@@ -202,6 +202,20 @@ tr, td {
     border: none;
     margin-top: 8px;
     box-shadow: -10px 0px 20px rgba(0,0,0,0.25);
+    outline: none !important;
+
+}
+
+.button-room:active, 
+.button-room:focus {
+    outline: none !important;
+}
+
+.preloader-room {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 50%;
 }
 
 .start-voting-btn {

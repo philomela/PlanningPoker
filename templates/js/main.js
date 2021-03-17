@@ -90,6 +90,15 @@ function parseXmlResponse(currentXml) {
                             clearInterval(timerTask);
                             timerStarted = false;
                             $('.is-current-active-1').next().text("Completed");
+                            $('.button-room').css({"-webkit-transform": "none", "transition-duration": "none"});
+                            $('.button-room').css({"pointer-events": "none"});
+                            $('.button-room').css({"opacity": "0.25"});
+                            $('.preloader-room').css({"display": "block"});
+                        }
+                        else{
+                            $('.preloader-room').css({"display": "none"});
+                            $('.button-room').css({"opacity": "100"});
+                            $('.button-room').css({"pointer-events": "auto"});
                         }
 
             $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb"><td id="tb-name-task">${tasks[i].getAttribute('NameTask')}</tr>`).appendTo($('#tb-results'));
@@ -174,10 +183,15 @@ function StartTimerTask(initTime) {
 }
 
 $(document).on('click', '.button-room', (e) => {
-    e.preventDefault()
-    socketInst.send(`ChangeVote==<Change><AddVote vote="1" score="${e.target.id.split('-')[1]}"/></Change>`)
-    console.log(e.target)
-    console.log(e.target.id.split('-')[1])
+    e.preventDefault();
+    socketInst.send(`ChangeVote==<Change><AddVote vote="1" score="${e.target.id.split('-')[1]}"/></Change>`);
+    var currBtn = $(`#${e.target.id}`);
+    $('.button-room').css({"-webkit-transform": "none", "transition-duration": "none"});
+    currBtn.css({"-webkit-transform": "translateY(-10px)", "transition-duration": "1000ms"});
+    
+
+    //currBtn.css({"-webkit-transform": ""})
+    
 });
 
 createWebSocket();

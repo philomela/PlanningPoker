@@ -50,6 +50,7 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/unknownroom", unknownroomHandler).Methods("GET")
 	router.HandleFunc("/bad-request", badRequestHandler).Methods("GET")
+	router.HandleFunc("/restore-password", restorePassword).Methods("POST")
 	router.HandleFunc("/rooms", checkAuthMiddleware(roomsHandler)).Queries("roomId", "")
 	router.HandleFunc("/loginform", checkAuthMiddleware(loginFormHandler)).Methods("GET")
 	router.HandleFunc("/create-room", checkAuthMiddleware(createRoomHandler)).Methods("POST")
@@ -305,6 +306,7 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	userName := r.FormValue("userName")
 	password := r.FormValue("password")
+	structCh := make(chan struct{})
 
 	if len(email) > 0 && len(password) > 0 && len(userName) > 0 {
 		resultSP, err := currentSqlServer.Query(`EXECUTE Add_User @LoginName=?, @Email=?, @Password=?`, userName, email, password)
@@ -324,6 +326,7 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(resultCheck))
 
 			go func(ss *PlanningPokerSettings.ServerSettings) {
+				defer close(structCh)
 				from := ss.SmtpServer.LoginHost
 				to := "romaphilomela@yandex.ru"
 				host := ss.SmtpServer.Host
@@ -337,6 +340,7 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 					fmt.Println("Error SendMail: ", err)
 				}
 			}(currentServerSettings)
+			<-structCh
 			return
 		} else {
 			w.Write([]byte(resultCheck))
@@ -398,4 +402,61 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/index.html")
 	tmpl.Execute(w, nil)
 	return
+}
+
+func restorePassword(w http.ResponseWriter, r *http.Request) {
+	email := r.FormValue("email")
+
+	type ViewData struct {
+		Message string
+	}
+
+	tmpl, _ := template.ParseFiles("templates/restore_account.html")
+
+	emailCh := make(chan string)
+	tmplMessage := make(chan ViewData)
+
+	go func() {
+		resultSP, err := currentSqlServer.Query(fmt.Sprintf("EXEC [Check_User_Email] '%s'", email))
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		var resultEmail string
+
+		for resultSP.Next() {
+			err := resultSP.Scan(&resultEmail)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+		emailCh <- resultEmail //Добавить горутину отправки ссыл
+	}()
+
+	go func() {
+		emailCurrCtx := <-emailCh
+
+		if emailCurrCtx == email {
+			from := currentServerSettings.SmtpServer.LoginHost
+			to := emailCurrCtx
+			host := currentServerSettings.SmtpServer.Host
+			auth := smtp.PlainAuth("", from, currentServerSettings.SmtpServer.PassHost, host)
+			message := fmt.Sprintf("To: %s\r\n"+
+				"Subject: discount Gophers!\r\n"+
+				"\r\n"+
+				"This is the email body.\r\n", emailCurrCtx)
+
+			if err := smtp.SendMail(host+currentServerSettings.SmtpServer.PortHost, auth, from, []string{to}, []byte(message)); err != nil {
+				fmt.Println("Error SendMail: ", err)
+			}
+			data := ViewData{Message: "Your account was restored, pls check in your email."}
+			tmplMessage <- data
+		} else {
+			data := ViewData{Message: "Such account was not found."}
+			tmplMessage <- data
+		}
+
+	}()
+
+	tmpl.Execute(w, <-tmplMessage)
 }
