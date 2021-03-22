@@ -51,6 +51,7 @@ func main() {
 	router.HandleFunc("/unknownroom", unknownroomHandler).Methods("GET")
 	router.HandleFunc("/bad-request", badRequestHandler).Methods("GET")
 	router.HandleFunc("/restore-password", restorePassword).Methods("POST")
+	router.HandleFunc("/restore-account", restoreAccountHandler).Methods("GET")
 	router.HandleFunc("/rooms", checkAuthMiddleware(roomsHandler)).Queries("roomId", "")
 	router.HandleFunc("/loginform", checkAuthMiddleware(loginFormHandler)).Methods("GET")
 	router.HandleFunc("/create-room", checkAuthMiddleware(createRoomHandler)).Methods("POST")
@@ -90,7 +91,7 @@ func main() {
 	}
 }
 
-/*Метод проверки существования комнаты по id*/
+/*End point to check exist room for id*/
 func roomsHandler(w http.ResponseWriter, r *http.Request) {
 	roomId := r.URL.Query()["roomId"][0]
 	if len(roomId) != lengthGUID {
@@ -128,7 +129,7 @@ func roomsHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-/*Метод создания новой комнаты с задачами*/
+/*End point to create new room with tasks*/
 func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 	userLogin := sessionsTool.GetUserLoginSession(r)
 	nameRoom := r.FormValue("nameRoom")
@@ -154,7 +155,7 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-/*Метод входа пользователей*/
+/*End point for to enter users*/
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	login := r.FormValue("loginUser")
 	password := r.FormValue("password")
@@ -182,7 +183,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-/*Метод отображения приглашения входа в комнату*/
+/*End point to display invitation to enter the room*/
 func roomHandler(w http.ResponseWriter, r *http.Request) {
 	var creatorOrUser string
 	userName := sessionsTool.GetUserLoginSession(r)
@@ -230,7 +231,7 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*Метод upgare запроса до протокола WebSocket*/
+/*End point to upgare request for protocol WebSocket*/
 func echoSocket(w http.ResponseWriter, r *http.Request) {
 	var (
 		URL    = r.URL.Query()["roomId"][0]
@@ -302,6 +303,7 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*End point for registration new users across post request*/
 func registrationHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	userName := r.FormValue("userName")
@@ -352,7 +354,7 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//Middleware для аутентификации, вынести логику аутентификации сюда.
+/*Middleware for auth*/
 func checkAuthMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		resultCheckCookie := sessionsTool.CheckAndUpdateSession(r, &w)
@@ -366,46 +368,58 @@ func checkAuthMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-/*Метод отображения формы входа*/
+/*End point to display login form*/
 func loginFormHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/loginForm.html")
 	tmpl.Execute(w, nil)
 	return
 }
 
-/*Метод отображения страницы создания комнаты*/
+/*End point to display the page to create room*/
 func newRoomHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/newPlanningPokerRoom.html")
 	tmpl.Execute(w, nil)
 	return
 }
 
+/*End point to display the page unknown room*/
 func unknownroomHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/unknownRoom.html")
 	tmpl.Execute(w, nil)
 	return
 }
 
+/*End point to display the page bad request*/
 func badRequestHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/error_bad_request.html")
 	tmpl.Execute(w, nil)
 	return
 }
 
+/*End point to display the page registration*/
 func registrationFormHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/registrationForm.html")
 	tmpl.Execute(w, nil)
 	return
 }
 
+/*End point to display the index page*/
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/index.html")
 	tmpl.Execute(w, nil)
 	return
 }
 
+/*End point to display the restore account  page*/
+func restoreAccountHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ := template.ParseFiles("templates/restoreAccountForm.html")
+	tmpl.Execute(w, nil)
+	return
+}
+
+/*End point for post request to restore password*/
 func restorePassword(w http.ResponseWriter, r *http.Request) {
-	email := r.FormValue("email")
+	email := r.FormValue("email-restore")
 
 	type ViewData struct {
 		Message string
@@ -430,13 +444,29 @@ func restorePassword(w http.ResponseWriter, r *http.Request) {
 				fmt.Println(err)
 			}
 		}
-		emailCh <- resultEmail //Добавить горутину отправки ссыл
+
+		emailCh <- resultEmail
 	}()
 
 	go func() {
+		resultSP, err := currentSqlServer.Query(fmt.Sprintf("EXEC [CreateAccountRecoveryLink] '%s'", email))
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		var recoveryLnk string
+
+		for resultSP.Next() {
+			err := resultSP.Scan(&recoveryLnk)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
 		emailCurrCtx := <-emailCh
 
 		if emailCurrCtx == email {
+
 			from := currentServerSettings.SmtpServer.LoginHost
 			to := emailCurrCtx
 			host := currentServerSettings.SmtpServer.Host
@@ -444,7 +474,7 @@ func restorePassword(w http.ResponseWriter, r *http.Request) {
 			message := fmt.Sprintf("To: %s\r\n"+
 				"Subject: discount Gophers!\r\n"+
 				"\r\n"+
-				"This is the email body.\r\n", emailCurrCtx)
+				"Your link on restore account: %s.\r\n", emailCurrCtx, recoveryLnk)
 
 			if err := smtp.SendMail(host+currentServerSettings.SmtpServer.PortHost, auth, from, []string{to}, []byte(message)); err != nil {
 				fmt.Println("Error SendMail: ", err)

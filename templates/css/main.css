@@ -315,3 +315,8 @@ tr, td {
     position: relative;
     --margin-top: 30%;
 }
+
+
+.forgot-pass {
+    display: block;
+}

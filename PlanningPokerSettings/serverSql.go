@@ -11,11 +11,6 @@ type ServerSql struct {
 	TypeSql string
 }
 
-func (serverSql ServerSql) ConfigureSqlServer(DSN string, TypeSql string) {
-	serverSql.DSN = DSN
-	serverSql.TypeSql = TypeSql
-}
-
 func (serverSql ServerSql) OpenConnection() (*sql.DB, error) {
-	return sql.Open(serverSql.TypeSql, serverSql.DSN) //Переписать реализацию и не открывать экземпляр один для всех обработчиков
+	return sql.Open(serverSql.TypeSql, serverSql.DSN)
 }
