@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/smtp"
 	"strings"
 	"time"
 
@@ -19,6 +18,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
 var currentServerSettings *PlanningPokerSettings.ServerSettings
@@ -50,8 +51,10 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/unknownroom", unknownroomHandler).Methods("GET")
 	router.HandleFunc("/bad-request", badRequestHandler).Methods("GET")
-	router.HandleFunc("/restore-password", restorePassword).Methods("POST")
+	router.HandleFunc("/restore-password", createRestoreAccountLink).Methods("POST")
 	router.HandleFunc("/restore-account", restoreAccountHandler).Methods("GET")
+	router.HandleFunc("/change-password-form", changePasswordFormHandler).Methods("GET")
+	router.HandleFunc("/update-password", restoreAccountUpdateHandler).Methods("POST")
 	router.HandleFunc("/rooms", checkAuthMiddleware(roomsHandler)).Queries("roomId", "")
 	router.HandleFunc("/loginform", checkAuthMiddleware(loginFormHandler)).Methods("GET")
 	router.HandleFunc("/create-room", checkAuthMiddleware(createRoomHandler)).Methods("POST")
@@ -329,16 +332,14 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 
 			go func(ss *PlanningPokerSettings.ServerSettings) {
 				defer close(structCh)
-				from := ss.SmtpServer.LoginHost
-				to := "romaphilomela@yandex.ru"
-				host := ss.SmtpServer.Host
-				auth := smtp.PlainAuth("", from, ss.SmtpServer.PassHost, host)
-				message := "To: romaphilomela@yandex.ru\r\n" +
-					"Subject: discount Gophers!\r\n" +
-					"\r\n" +
-					"This is the email body.\r\n"
-
-				if err := smtp.SendMail(host+ss.SmtpServer.PortHost, auth, from, []string{to}, []byte(message)); err != nil {
+				from := mail.NewEmail("Planning poker team", "romaphilomela@yandex.ru")
+				subject := "Successful registration"
+				to := mail.NewEmail("Dear User", email)
+				plainTextContent := "You have successfully registered with Planning-poker"
+				htmlContent := fmt.Sprintf("<strong>You have successfully registered with Planning-poker with login: %s</strong>", userName)
+				message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+				client := sendgrid.NewSendClient(ss.SmtpServer.ApiKey)
+				if _, err := client.Send(message); err != nil {
 					fmt.Println("Error SendMail: ", err)
 				}
 			}(currentServerSettings)
@@ -418,7 +419,7 @@ func restoreAccountHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 /*End point for post request to restore password*/
-func restorePassword(w http.ResponseWriter, r *http.Request) {
+func createRestoreAccountLink(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email-restore")
 
 	type ViewData struct {
@@ -467,16 +468,14 @@ func restorePassword(w http.ResponseWriter, r *http.Request) {
 
 		if emailCurrCtx == email {
 
-			from := currentServerSettings.SmtpServer.LoginHost
-			to := emailCurrCtx
-			host := currentServerSettings.SmtpServer.Host
-			auth := smtp.PlainAuth("", from, currentServerSettings.SmtpServer.PassHost, host)
-			message := fmt.Sprintf("To: %s\r\n"+
-				"Subject: discount Gophers!\r\n"+
-				"\r\n"+
-				"Your link on restore account: %s.\r\n", emailCurrCtx, recoveryLnk)
-
-			if err := smtp.SendMail(host+currentServerSettings.SmtpServer.PortHost, auth, from, []string{to}, []byte(message)); err != nil {
+			from := mail.NewEmail("planning-poker team", "romaphilomela@yandex.ru")
+			subject := "An attempt was made to restore your account"
+			to := mail.NewEmail("Dear User", emailCurrCtx)
+			plainTextContent := "An attempt was made to restore your account"
+			htmlContent := fmt.Sprintf("<strong>An attempt was made to restore your account. To change your password, follow the link: %s</strong>", currentServerSettings.ServerHost.ExternalHostName+currentServerSettings.ServerHost.RestoreAccount+recoveryLnk)
+			message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+			client := sendgrid.NewSendClient(currentServerSettings.SmtpServer.ApiKey)
+			if _, err := client.Send(message); err != nil {
 				fmt.Println("Error SendMail: ", err)
 			}
 			data := ViewData{Message: "Your account was restored, pls check in your email."}
@@ -489,4 +488,53 @@ func restorePassword(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	tmpl.Execute(w, <-tmplMessage)
+}
+
+/*End point to display the restore account  page*/
+func changePasswordFormHandler(w http.ResponseWriter, r *http.Request) {
+	linkRestore := r.URL.Query().Get("linkRestore")
+
+	type ViewData struct {
+		RestoreLink string
+	}
+
+	data := ViewData{RestoreLink: linkRestore}
+	tmpl, _ := template.ParseFiles("templates/changePasswordForm.html")
+	tmpl.Execute(w, data)
+	return
+}
+
+/*End point for change password*/
+func restoreAccountUpdateHandler(w http.ResponseWriter, r *http.Request) {
+	linkRestore := r.FormValue("linkRestore")
+	newPass := r.FormValue("password")
+
+	resultSP, err := currentSqlServer.Query(fmt.Sprintf("EXEC [RestoreAccount] '%s', '%s'", linkRestore, newPass))
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var resultUpdPass bool
+
+	for resultSP.Next() {
+		err := resultSP.Scan(&resultUpdPass)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	tmpl, _ := template.ParseFiles("templates/restore_account_success.html") //дописать проставку неактивной ссылки и проверку не протухшей ссылки для обновления пароля
+
+	type ViewData struct {
+		Message string
+	}
+
+	if resultUpdPass == true {
+		data := ViewData{Message: "restored and change password"}
+		tmpl.Execute(w, data)
+	} else {
+		data := ViewData{Message: "not restore because your link was use"}
+		tmpl.Execute(w, data)
+	}
+	return
 }
