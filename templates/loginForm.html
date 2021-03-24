@@ -70,7 +70,8 @@
                         <label for="password">Password:</label>
                         <input type="password" id="password" name="password" class="form-control" placeholder="Enter password">
                         <p id="warning"></p>
-                    </div>
+                        <a href="http://localhost:8080/restore-account" class="forgot-pass">Forgot password?</a>
+                    </div>              
                     <button id="submit-log" type="submit" class="btn btn-primary">Submit</button>
                 
                 
@@ -93,11 +94,11 @@
       url: "../login",
       data: `loginUser=${$('#login').val()}&password=${$('#password').val()}`,
       success: function(msg){
-        if (msg != "Wrong") {
-          window.location.href = msg;
+        if (msg == "Wrong") {
+          $('#warning').text("Invalid login/password");        
         }
         else {
-          $('#warning').text("Invalid login/password");
+          window.location.href = msg;
         }     
       }});
     });

@@ -7,9 +7,11 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
         integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <link rel="stylesheet" href="templates/css/main.css">
+    {{ .CreatorStyles}}
     <link
         href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400;1,600;1,700;1,800&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="templates/font-awesome-4.7.0/css/font-awesome.min.css">
     <title>Sign In</title>
 </head>
 
@@ -66,25 +68,54 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-lg-12 text-center name-meeting">
-                <h1></h1>
+                <h1 class="name-room"></h1>
             </div>
-            <div class="col-lg-4 text-center justify-content-left left-menu-room">
+            <div class="col-lg-4 justify-content-left left-menu-room">
+                <h3 class="name-left-menu text-center"><span>Tasks list</span><i class="fa fa-thumb-tack" aria-hidden="true"></i></h3>
                 <div class="tasks-left-menu-room"></div>
                 <div class="creator-tools">{{ .CreatorTools}}</div>
+
             </div>
             <div class="col-lg-6 text-center main-room">
-                <!-- <canvas id="canv"></canvas> -->
-                <button id="btn-1" class="button-room"><img src="/templates/img/voice-1.png" alt="" width="100"></button>
-                <button id="btn-2" class="button-room"><img src="/templates/img/voice-2.png" alt="" width="100"></button>
-                <button id="btn-3" class="button-room"><img src="/templates/img/voice-3.png" alt="" width="100"></button>
-                <button id="btn-4" class="button-room"><img src="/templates/img/voice-4.png" alt="" width="100"></button>
-                <button id="btn-5" class="button-room"><img src="/templates/img/voice-5.png" alt="" width="100"></button>
+                <div class="preloader-room"></div>
+                <button id="btn-1" class="button-room"><img id="btn-1" src="/templates/img/voice-1.png" alt=""
+                        width="100"></button>
+                <button id="btn-2" class="button-room"><img id="btn-2" src="/templates/img/voice-2.png" alt=""
+                        width="100"></button>
+                <button id="btn-3" class="button-room"><img id="btn-3" src="/templates/img/voice-3.png" alt=""
+                        width="100"></button>
+                <button id="btn-5" class="button-room"><img id="btn-5" src="/templates/img/voice-5.png" alt=""
+                        width="100"></button>
+                <button id="btn-8" class="button-room"><img id="btn-8" src="/templates/img/voice-8.png" alt=""
+                        width="100"></button>
+                <button id="btn-13" class="button-room"><img id="btn-13" src="/templates/img/voice-13.png" alt=""
+                        width="100"></button>
+                <button id="btn-20" class="button-room"><img id="btn-20" src="/templates/img/voice-20.png" alt=""
+                        width="100"></button>
+                <button id="btn-40" class="button-room"><img id="btn-40" src="/templates/img/voice-40.png" alt=""
+                        width="100"></button>
+                <button id="btn-999" class="button-room"><img id="btn-999" src="/templates/img/voice-coffee.png" alt=""
+                        width="100"></button>
+                <button id="btn-777" class="button-room"><img id="btn-777" src="/templates/img/voice-question.png" alt=""
+                        width="100"></button>
+
             </div>
-            <div class="col-lg-2 text-center right-menu-room">
-                <h3 class="text-center">Party:</h3>
+
+            <div class="col-lg-2 text-left right-menu-room">
+                <h3 class="name-right-menu text-center"><span>Party</span><i class="fa fa-thumb-tack" aria-hidden="true"></i></h3>
                 <ul>
 
                 </ul>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 footer-container-results">
+                <div class="results-voting">
+                    <h3 class="text-center name-results-menu">
+                        Voting results
+                    </h3>
+                    <table id="tb-results" class="text-left" align="center"></table>
+                </div>
             </div>
         </div>
         <div class="row justify-content-center">
@@ -103,10 +134,40 @@
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
         crossorigin="anonymous"></script>
 
+
+    
+    
+    
+
+    <script>
+        function createWebSocket() {
+    socketInst = new WebSocket({{ .WebSocketExternalAddress}} + $.getUrlVar('roomId'));
+    socketInst.onopen = function (event) {
+        socketInst.send("ChangeGetVM")
+
+    }
+    socketInst.onmessage = function (event) {
         
-        <script src="templates/js/main.js"></script>
-        {{ .CreatorScripts}} <!-- Подключение скриптов js создателя-->
-       
+        currentXmlString = event.data;
+        
+        var parserXml = new DOMParser();
+        currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
+        console.log(currentXml.getElementsByTagName('Error')[0], currentXml);
+        if (currentXml.getElementsByTagName('Room')[0].getAttribute('Error') == "UnknownRoom"){
+            document.location.href = "unknownroom";
+        }
+
+        parseXmlResponse(currentXml);
+        //alert(currentXmlString);
+    }
+}
+    </script>
+
+<script src="templates/js/main.js"></script>
+
+    {{ .CreatorScripts}}
+    <!-- Подключение скриптов js создателя-->
+
 
 </body>
 

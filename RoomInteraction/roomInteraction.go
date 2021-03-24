@@ -1,9 +1,18 @@
 package RoomInteraction
 
 import (
+	"html/template"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
+
+type RoomPatternHtml struct {
+	CreatorTools             template.HTML
+	CreatorScripts           template.HTML
+	CreatorStyles            template.HTML
+	WebSocketExternalAddress template.HTML
+}
 
 type Connection struct {
 	Conn      *websocket.Conn
@@ -28,6 +37,8 @@ func NewChangesViewModel() *ChangesViewModel {
 	ChangesViewModelOut.Changes["ChangeGetVM"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
 	ChangesViewModelOut.Changes["StartVoting"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
 	ChangesViewModelOut.Changes["StopVoting"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+	ChangesViewModelOut.Changes["FinishPlanning"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+
 	return &ChangesViewModelOut
 }
 
