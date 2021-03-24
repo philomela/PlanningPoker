@@ -1,4 +1,5 @@
-let socketInst, currentXmlString, currentXml;
+var socketInst, currentXmlString, currentXml;
+var buttonStartVoting;
 const coffeeIcon = 999, questionIcon = 777, coffeeIconMedian = "999.00", questionIconMedian = "777.00"
 
 $.extend({
@@ -41,7 +42,14 @@ function parseXmlResponse(currentXml) {
         for (let i = 0; i < tasks.length; i++) {
                 
             if (tasks[i].getAttribute('IsCurrentActive') == 1) {
-                console.log(tasks[i].getAttribute('IsCurrentActive'));
+                
+                
+
+                $(document).ready(function() {
+                    buttonStartVoting = $(`#start-voting`).prop("disabled", true); 
+                    buttonStartVoting.css({"background": "#b3b3b3"});
+                                       
+                });
                 
                 if (countTimerStarted <= 1){
                     StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));
@@ -64,6 +72,7 @@ function parseXmlResponse(currentXml) {
                         ${tasks[i].getAttribute('TimeDiscussion')} :min</div>`).appendTo($('.tasks-left-menu-room'));
                         if (tasks[i].getAttribute('Completed') == 1){
                             $(`#task-${tasks[i].getAttribute('Id')}`).css({ "text-decoration": "line-through", "pointer-events": "none"});
+
                         }
                         var hasCurrentActive = false;
                         for (let i = 0; i < tasks.length; i++){
@@ -81,6 +90,15 @@ function parseXmlResponse(currentXml) {
                             clearInterval(timerTask);
                             timerStarted = false;
                             $('.is-current-active-1').next().text("Completed");
+                            $('.button-room').css({"-webkit-transform": "none", "transition-duration": "none"});
+                            $('.button-room').css({"pointer-events": "none"});
+                            $('.button-room').css({"opacity": "0.25"});
+                            $('.preloader-room').css({"display": "block"});
+                        }
+                        else{
+                            $('.preloader-room').css({"display": "none"});
+                            $('.button-room').css({"opacity": "100"});
+                            $('.button-room').css({"pointer-events": "auto"});
                         }
 
             $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb"><td id="tb-name-task">${tasks[i].getAttribute('NameTask')}</tr>`).appendTo($('#tb-results'));
@@ -96,7 +114,7 @@ function parseXmlResponse(currentXml) {
                     }
                 }
             }
-            if (!timerStarted) {
+            if (!hasCurrentActive) {
                 $(`<td id="tsk-tb-median">Median:</td>`).appendTo($('#tb-results').children().last());
                 $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb-nested"><td id="tb-name-task"></tr>`).appendTo($('#tb-results'));
                 for (let j = 0; j < currPersonTasks.length; j++) {
@@ -136,8 +154,6 @@ function parseXmlResponse(currentXml) {
         }
 
     }
-
-    console.log(persons);
 }
 
 var timerStarted = false;
@@ -167,19 +183,16 @@ function StartTimerTask(initTime) {
 }
 
 $(document).on('click', '.button-room', (e) => {
-    e.preventDefault()
-    socketInst.send(`ChangeVote==<Change><AddVote vote="1" score="${e.target.id.split('-')[1]}"/></Change>`)
-    console.log(e.target)
-    console.log(e.target.id.split('-')[1])
-});
+    e.preventDefault();
+    socketInst.send(`ChangeVote==<Change><AddVote vote="1" score="${e.target.id.split('-')[1]}"/></Change>`);
+    var currBtn = $(`#${e.target.id}`);
+    $('.button-room').css({"-webkit-transform": "none", "transition-duration": "none"});
+    currBtn.css({"-webkit-transform": "translateY(-10px)", "transition-duration": "1000ms"});
+    
 
-$('#yellow').click(() => {
-    SendColor('yellow')
+    //currBtn.css({"-webkit-transform": ""})
+    
 });
-$('#green').click(() => {
-    SendColor('green')
-});
-
 
 createWebSocket();
 

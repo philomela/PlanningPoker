@@ -10,14 +10,18 @@
         "InternalHostName": "http://localhost:8080/",
         "ExternalHostName": "http://localhost:8080/",
         "Room": "rooms?roomId=",
+        "ExternalPathToLoginForm": "http://localhost:8080/loginform",
         "WebSocketProtocol": "ws://",
-        "WebSocketExternalAddress": "ws://localhost:8080/echo?roomId="
+        "WebSocketExternalAddress": "ws://localhost:8080/echo?roomId=",
+        "RestoreAccount": "change-password-form?linkRestore="
     },
     "SmtpServer": {
-        "Host": "mail.hosting.reg.ru",
-        "LoginHost": "planningpoker@u0932131.plsk.regruhosting.ru",
-        "PassHost": "Rom@nkhik",
-        "PortHost": ":587"
+        "Host": "smtp.server.net",
+        "LoginHost": "planning-poker",
+        "PassHost": "pass",
+        "PortHost": ":587",
+        "ApiKey": "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"
     }
     
 }
+
