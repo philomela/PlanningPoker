@@ -102,7 +102,7 @@
         <div class="container-fluid ">
             <div class="row justify-content-center align-items-center">
                 <div class="col-lg-12 mt-3">
-                    <a name="How-it-works"></a>
+                    <a id="How-it-works"></a>
                     <h3 class="title-slide-section text-center">How it works?</h3>
                 </div>
 
@@ -131,7 +131,7 @@
         <div class="container-fluid">
             <div class="row justify-content-center">
                 <div class="col-lg-7 text-center footer-block">
-                    <a name="Contacts"></a>
+                    <a id="Contacts"></a>
                     <p>Design and development by Roman Solovyev © | <a class="link-email"
                             href="mailto:romaphilomela@yandex.ru">romaphilomela@yandex.ru</a> |<a class="link-git"
                             href="https://github.com/philomela/PlanningPoker">GitHub <i class="fa fa-github"
@@ -167,18 +167,13 @@
             console.log("hello")
         });
 
-        $('.nav-item .scrollto').on('click', function () {
-
-            let href = $(this).attr('href');
-
-            $('html, body').animate({
-                scrollTop: $(href).offset().top
-            }, {
-                duration: 370,   // по умолчанию «400» 
-                easing: "linear" // по умолчанию «swing» 
+        $(document).ready(function () {
+            $("a.scrollto").click(function () {
+                elementClick = $(this).attr("href")
+                destination = $(elementClick).offset().top;
+                $("html:not(:animated),body:not(:animated)").animate({ scrollTop: destination }, 1800);
+                return false;
             });
-
-            return false;
         });
 
     </script>
