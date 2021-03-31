@@ -1,4 +1,5 @@
-<html>
+<html lang="en">
+
 
 <head>
   <meta charset="utf-8">
@@ -53,9 +54,13 @@
       <div class="col-lg-5">
         <div class="form-group">
           <label for="email">Email:</label>
+          <div class="notification-email">email is not valid</div>
           <input type="email" id="email" name="email" class="form-control" placeholder="Enter email">
           <label for="userName">Username:</label>
+          <div class="notification-username">username maybe from 3 to 24 any symbols</div>
           <input type="text" id="userName" name="userName" class="form-control" placeholder="Enter username">
+          <div class="notification-pass">password maybe from 6 to 24 symbols and include 1 number or special symbol
+          </div>
           <label for="password">Password:</label>
           <input type="password" id="password" name="password" class="form-control" placeholder="Enter password">
           <p id="warning"></p>
@@ -76,11 +81,34 @@
     integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
     crossorigin="anonymous"></script>
 
+  <script src="templates/js/validations.js"></script>
+
   <script type="text/javascript">
     $('#submit-reg').click(() => {
+      $('.notification-email, .notification-username, .notification-pass').css({ "display": "none" });
+      $('#email, #userName, #password').css({ "border": "none" })
+
       email = $('#email').val();
       userName = $('#userName').val();
       password = $('#password').val();
+
+      if (!validationEmail.validate(email)) {
+        $('.notification-email').css({ "display": "block" });
+        $('#email').css({ "border": "1px solid red" })
+        return
+      }
+      if (!validationUsername.validate(userName)) {
+        $('.notification-username').css({ "display": "block" });
+        $('#userName').css({ "border": "1px solid red" })
+        return
+      }
+      if (!validationPass.validate(password)) {
+        $('.notification-pass').css({ "display": "block" })
+        $('#password').css({ "border": "1px solid red" })
+        return
+      }
+
+      $('#warning').css({ "display": "block" });
 
       $.ajax({
         type: "POST",
@@ -101,7 +129,8 @@
     });
 
     $('#signIn').click(() => {
-                window.location.href="/loginform";})
+      window.location.href = "/loginform";
+    })
   </script>
 
 </body>
