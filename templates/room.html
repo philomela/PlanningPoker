@@ -22,7 +22,7 @@
                 <div class="col-lg-12">
 
                     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                        <a class="navbar-brand" href="#">
+                        <a class="navbar-brand" href="/">
                             <img src="../templates/img/icon.png" width="30" height="30" alt="">
                         </a>
                         <button class="navbar-toggler" type="button" data-toggle="collapse"
@@ -34,25 +34,7 @@
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul class="navbar-nav mr-auto">
                                 <li class="nav-item active">
-                                    <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#">Link</a>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        Dropdown
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                        <a class="dropdown-item" href="#">Action</a>
-                                        <a class="dropdown-item" href="#">Another action</a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="#">Something else here</a>
-                                    </div>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link disabled" href="#">Disabled</a>
+                                    <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
                                 </li>
                             </ul>
                             <form class="form-inline">
@@ -71,13 +53,16 @@
                 <h1 class="name-room"></h1>
             </div>
             <div class="col-lg-4 justify-content-left left-menu-room">
-                <h3 class="name-left-menu text-center"><span>Tasks list</span><i class="fa fa-thumb-tack" aria-hidden="true"></i></h3>
+                <h3 class="name-left-menu text-center"><span>Tasks list</span><i class="fa fa-thumb-tack"
+                        aria-hidden="true"></i></h3>
                 <div class="tasks-left-menu-room"></div>
                 <div class="creator-tools">{{ .CreatorTools}}</div>
 
             </div>
             <div class="col-lg-6 text-center main-room">
-                <div class="preloader-room"></div>
+                <div class="preloader-room">
+
+                </div>
                 <button id="btn-1" class="button-room"><img id="btn-1" src="/templates/img/voice-1.png" alt=""
                         width="100"></button>
                 <button id="btn-2" class="button-room"><img id="btn-2" src="/templates/img/voice-2.png" alt=""
@@ -96,13 +81,14 @@
                         width="100"></button>
                 <button id="btn-999" class="button-room"><img id="btn-999" src="/templates/img/voice-coffee.png" alt=""
                         width="100"></button>
-                <button id="btn-777" class="button-room"><img id="btn-777" src="/templates/img/voice-question.png" alt=""
-                        width="100"></button>
+                <button id="btn-777" class="button-room"><img id="btn-777" src="/templates/img/voice-question.png"
+                        alt="" width="100"></button>
 
             </div>
 
             <div class="col-lg-2 text-left right-menu-room">
-                <h3 class="name-right-menu text-center"><span>Party</span><i class="fa fa-thumb-tack" aria-hidden="true"></i></h3>
+                <h3 class="name-right-menu text-center"><span>Party</span><i class="fa fa-thumb-tack"
+                        aria-hidden="true"></i></h3>
                 <ul>
 
                 </ul>
@@ -135,35 +121,37 @@
         crossorigin="anonymous"></script>
 
 
-    
-    
-    
+
+
+
 
     <script>
+        
+
         function createWebSocket() {
-    socketInst = new WebSocket({{ .WebSocketExternalAddress}} + $.getUrlVar('roomId'));
-    socketInst.onopen = function (event) {
-        socketInst.send("ChangeGetVM")
+            socketInst = new WebSocket({{ .WebSocketExternalAddress }} + $.getUrlVar('roomId'));
+        socketInst.onopen = function (event) {
+            socketInst.send("ChangeGetVM")
 
-    }
-    socketInst.onmessage = function (event) {
-        
-        currentXmlString = event.data;
-        
-        var parserXml = new DOMParser();
-        currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
-        console.log(currentXml.getElementsByTagName('Error')[0], currentXml);
-        if (currentXml.getElementsByTagName('Room')[0].getAttribute('Error') == "UnknownRoom"){
-            document.location.href = "unknownroom";
         }
+        socketInst.onmessage = function (event) {
 
-        parseXmlResponse(currentXml);
-        //alert(currentXmlString);
-    }
+            currentXmlString = event.data;
+
+            var parserXml = new DOMParser();
+            currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
+            console.log(currentXml.getElementsByTagName('Error')[0], currentXml);
+            if (currentXml.getElementsByTagName('Room')[0].getAttribute('Error') == "UnknownRoom") {
+                document.location.href = "unknownroom";
+            }
+
+            parseXmlResponse(currentXml);
+            //alert(currentXmlString);
+        }
 }
     </script>
 
-<script src="templates/js/main.js"></script>
+    <script src="templates/js/main.js"></script>
 
     {{ .CreatorScripts}}
     <!-- Подключение скриптов js создателя-->

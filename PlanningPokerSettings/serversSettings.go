@@ -14,16 +14,20 @@ type ServerSettings struct {
 }
 
 type ServerHost struct {
-	Protocol                 string
-	Host                     string
-	Port                     string
-	InternalHostName         string
-	ExternalHostName         string
-	ExternalPathToLoginForm  string
-	Room                     string
-	WebSocketProtocol        string
-	WebSocketExternalAddress string
-	RestoreAccount           string
+	Protocol                       string
+	Host                           string
+	Port                           string
+	InternalHostName               string
+	ExternalHostName               string
+	ExternalPathToLoginForm        string
+	ExternalPathToNewRoom          string
+	ExternalPathToRestoreAccForm   string
+	ExternalPathToChangePassForm   string
+	Room                           string
+	WebSocketProtocol              string
+	WebSocketExternalAddress       string
+	RestoreAccount                 string
+	ExternalPathToRegistrationForm string
 }
 
 type ServerSmtp struct {
@@ -64,6 +68,9 @@ func (s *ServerSettings) InitSettingFromEnvVariables(envParam string) {
 		s.ServerHost.InternalHostName = os.Getenv("PLANNING_POKER_INTERNALHOSTNAME")
 		s.ServerHost.ExternalHostName = os.Getenv("PLANNING_POKER_EXTERNALHOSTNAME")
 		s.ServerHost.ExternalPathToLoginForm = os.Getenv("PLANNING_POKER_EXT_PATH_LOGINFROM")
+		s.ServerHost.ExternalPathToNewRoom = os.Getenv("PLANNING_POKER_EXT_PATH_NEWROOM")
+		s.ServerHost.ExternalPathToRegistrationForm = os.Getenv("PLANNING_POKER_EXT_PATH_REGFORM")
+		s.ServerHost.ExternalPathToRestoreAccForm = os.Getenv("PLANNING_POKER_EXT_PATH_RESTOREACC")
 		s.ServerHost.WebSocketProtocol = os.Getenv("PLANNING_POKER_WEBSOCKET_PROTOCOL")
 		s.ServerHost.WebSocketExternalAddress = os.Getenv("PLANNING_POKER_WEBSOCKET_EXTERNALADDRESS")
 		s.SmtpServer.ApiKey = os.Getenv("PLANNING_POKER_SMTP_APIKEY")

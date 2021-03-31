@@ -4,6 +4,8 @@ $('#start-voting').click(() => {
 
     socketInst.send(`StartVoting==${startVotingData}`)
     startVotingData = null;
+    buttonFinishVoting = $('#finish-voting').prop("disabled", false);
+    buttonFinishVoting.css({"background": "#ff0000"});
 });
 
 $(document).on('click', '.task-room', (e) => {
@@ -19,10 +21,8 @@ $('#finish-voting').click(() => {
     timerStarted = false;
     clearInterval(timerTask);
     $('.is-current-active-1').next().text("Completed");
-    $(document).ready(function() {
-        buttonStartVoting.prop("disabled", false); 
-        buttonStartVoting.css({"background": "#40AA29"});                   
-    });
+    buttonFinishVoting = $('#finish-voting').prop("disabled", true);
+    buttonFinishVoting.css({"background": "#b3b3b3"});
 });
 
 $('#finish-planning').click(() => {
@@ -30,6 +30,9 @@ $('#finish-planning').click(() => {
 });
 
 $(document).on('click', '.task-room', (e) => {
+    buttonStartVoting = $(`#start-voting`).prop("disabled", false); 
+    buttonStartVoting.css({"background": "#40AA29"});
     $('.task-room').css({"font-size": "12px", "font-weight": "normal"})
     $('#'+e.target.id).css({"font-size": "14px", "font-weight": "bold"})
+    
 });

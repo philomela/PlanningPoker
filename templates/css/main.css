@@ -57,12 +57,20 @@ article {
 .article-img {
     --display: inline-block;
 }
-footer {
-    background-color: yellow;
+
+.title-slide-section {
+    color: white;
 }
+
 .footer-block {
-    background-color: aqua;
+    color:white;
+    font-size: 13px;
 }
+
+.fa-github {
+    font-size: 18px;
+}
+
 .btn-primary {
     background: #f8f9fa;
     color: #40AA29;
@@ -75,6 +83,7 @@ footer {
 }
 
 #warning {
+    display: none;
     color: red;
 }
 
@@ -219,7 +228,7 @@ tr, td {
 }
 
 .start-voting-btn {
-    background-color: #40AA29;
+    background-color: #b3b3b3;
     border-radius: 3px;
     border: none;
     font-size: 14px;
@@ -229,7 +238,7 @@ tr, td {
 
 .finish-voting-btn {
     --width: 100px;
-    background-color: red;
+    background-color: #b3b3b3;
     border-radius: 3px;
     border: none;
     font-size: 14px;
@@ -269,6 +278,10 @@ tr, td {
 
 .how-it-works {
     color: white;
+    
+}
+
+.buttom-block {
     background: linear-gradient(to top left, #1e5aa5, #6d0e58);
 }
 
@@ -319,4 +332,50 @@ tr, td {
 
 .forgot-pass {
     display: block;
+}
+
+.login-form {
+    background-color: #f1f1f1;
+   
+}
+
+.login-form .login {
+    border: none !important;
+}
+
+.link-git {
+    color: white !important;
+}
+
+.link-email {
+    color: white !important;
+}
+
+#push-tasks {
+    background-color: #6d0e58;
+    border: none;
+    color: white;
+}
+
+#add-new-task {
+    color: #f8f9fa;
+    background: #40AA29;
+    border: 1px solid #40AA29;
+}
+
+#email-restore, #pass-restore{
+    width: 60%;
+    display: block;
+    margin: 0 auto;
+}
+
+.second-show{
+    font-size: 24px;
+    color: #6d0e58;
+    font-weight: 600;
+}
+
+.notification-email, .notification-pass, .notification-username {
+    color: red;
+    display: none;
 }

@@ -11,6 +11,10 @@
         "ExternalHostName": "http://localhost:8080/",
         "Room": "rooms?roomId=",
         "ExternalPathToLoginForm": "http://localhost:8080/loginform",
+        "ExternalPathToNewRoom": "http://localhost:8080/newroom",
+        "ExternalPathToRegistrationForm": "http://localhost:8080/registrationform",
+        "ExternalPathToRestoreAccForm": "http://localhost:8080/restore-account",
+        "ExternalPathToChangePassForm": "http://localhost:8080/change-password-form",
         "WebSocketProtocol": "ws://",
         "WebSocketExternalAddress": "ws://localhost:8080/echo?roomId=",
         "RestoreAccount": "change-password-form?linkRestore="
