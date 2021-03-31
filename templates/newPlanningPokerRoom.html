@@ -20,7 +20,7 @@
                 <div class="col-lg-12">
 
                     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                        <a class="navbar-brand" href="#">
+                        <a class="navbar-brand" href="/">
                             <img src="../templates/img/icon.png" width="30" height="30" alt="">
                         </a>
                         <button class="navbar-toggler" type="button" data-toggle="collapse"
@@ -32,26 +32,8 @@
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul class="navbar-nav mr-auto">
                                 <li class="nav-item active">
-                                    <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="#">Link</a>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        Dropdown
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                        <a class="dropdown-item" href="#">Action</a>
-                                        <a class="dropdown-item" href="#">Another action</a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="#">Something else here</a>
-                                    </div>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link disabled" href="#">Disabled</a>
-                                </li>
+                                    <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+                                </li>                           
                             </ul>
                             <form class="form-inline">
                                 <button id="signUp" class="btn btn-outline-success" type="button">Sign Up</button>
@@ -67,23 +49,23 @@
         <div class="container-fluid">
             <div class="row justify-content-center">
                 <div class="col-lg-8 text-center">
-                    <h1 class="header-name-text">
-                        Hello dear SCRUM master!
-                    </h1>
+                    <h3 class="header-name-text">
+                        Hello, dear SCRUM master!
+                    </h3>
                 </div>
             </div>
         </div>
         <div class="container-fluid">
             <div class="row justify-content-center">
-                <div class="col-lg-12 text-center">
-                    <h3 class="article-name-text-first">
+                <div class="col-lg-8 text-center">
+                    <h4 class="article-name-text-first">
                         First, name the meeting
-                    </h3>
+                    </h4>
                 </div>
             </div>
 
             <div class="row justify-content-center">
-                <div class="col-lg-8">
+                <div class="col-lg-6">
                     <div class="form-group name-meeting-block">
                         <label for="name-meeting">Name meeting:</label>
                         <input type="text" class="form-control" id="name-meeting" name="name-meeting">
@@ -92,31 +74,31 @@
             </div>
 
             <div class="row justify-content-center">
-                <div class="col-lg-12 text-center">
-                    <h3 class="article-name-text-second">
+                <div class="col-lg-8 text-center">
+                    <h4 class="article-name-text-second">
                         Second, add tasks to grade for the upcoming sprint
-                    </h3>
+                    </h4>
                 </div>
             </div>
             <div class="row justify-content-center">
-                <div class="col-lg-6">
+                <div class="col-lg-5">
 
                     <div class="form-group tasks-controls">
-                        <label for="task">Task:</label>
+                        <label for="task">Task and time for discussion:</label>
                         <input type="text" class="form-control" id="task" name="task">
                     </div>
                 </div>
 
-                <div class="col-lg-2">
+                <div class="col-lg-1">
                     <div class="form-group task-timer">
-                        <label for="time-discussion">Time for discussion:</label>
+                        <label for="time-discussion">Minutes:</label>
                         <input type="number" min="1" max="10" class="form-control time-discuss" id="time-discussion" name="time-task">
                     </div>
                 </div>
 
             </div>
             <div class="row justify-content-center">
-                <div class="col-lg-8 text-left">
+                <div class="col-lg-6 text-left">
                     <button type="button" id="add-new-task" class="btn btn-primary">Add new task</button>
                     <button type="submit" id="push-tasks" class="btn btn-primary">Push tasks</button>
                 </div>
@@ -125,19 +107,19 @@
 
         <div class="container-fluid">
             <div class="row justify-content-center">
-                <div class="col-lg-12 text-center">
-                    <h3 class="article-name-text-second">
+                <div class="col-lg-8 mt-3 text-center">
+                    <h4 class="article-name-text-second">
                         Third, copy and send link your friends
-                    </h3>
+                    </h4>
                 </div>
             </div>
             <div class="row justify-content-center">
-                <div class="col-lg-8">
+                <div class="col-lg-6">
 
                     <div class="form-group link-room-block">
                         <label for="task">Your link:</label>
                         <input type="text" class="form-control" id="link-room" name="task">
-                        <button type="button" id="change-location" class="btn btn-primary">Go to the room</button>
+                        <button type="button" id="change-location" class="mt-2 btn btn-primary">Go to the room</button>
                     </div>
 
                 </div>
@@ -186,8 +168,8 @@
         });
 
         $('#add-new-task').click(() => {
-            $('.tasks-controls').append(`<label for="task">Task:</label><input type="text" class="form-control" id="task" name="task">`);
-            $('.task-timer').append(`<label for="time-discussion">Time for discussion:</label><input type="number" min="1" max="10" class="form-control time-discuss" id="time-discussion" name="time-task">`);
+            $('.tasks-controls').append(`<label for="task">Task and time for discussion:</label><input type="text" class="form-control" id="task" name="task">`);
+            $('.task-timer').append(`<label for="time-discussion">Minutes:</label><input type="number" min="1" max="10" class="form-control time-discuss" id="time-discussion" name="time-task">`);
         });
 
         $('#push-tasks').click(() => {
@@ -203,6 +185,9 @@
                 }
             });
         });
+
+        $('#signUp').click(() => {
+                window.location.href="/registrationform";})
     </script>
 
 

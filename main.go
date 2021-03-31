@@ -11,9 +11,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/go-passwd/validator"
 	"github.com/google/uuid"
 
 	"github.com/gorilla/mux"
@@ -43,15 +45,16 @@ var upgrader = websocket.Upgrader{
 }
 
 const (
-	cookieName = "sessionId"
-	lengthGUID = 36
+	cookieName         = "sessionId"
+	lengthGUID         = 36
+	regexpPatternEmail = `^[-\w.]+@([A-z0-9][-A-z0-9]+\.)+[A-z]{2,4}$`
 )
 
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/unknownroom", unknownroomHandler).Methods("GET")
 	router.HandleFunc("/bad-request", badRequestHandler).Methods("GET")
-	router.HandleFunc("/restore-password", createRestoreAccountLink).Methods("POST")
+	router.HandleFunc("/restore-password", validateDataMiddleware(createRestoreAccountLink)).Methods("POST")
 	router.HandleFunc("/restore-account", restoreAccountHandler).Methods("GET")
 	router.HandleFunc("/change-password-form", changePasswordFormHandler).Methods("GET")
 	router.HandleFunc("/update-password", restoreAccountUpdateHandler).Methods("POST")
@@ -59,11 +62,11 @@ func main() {
 	router.HandleFunc("/loginform", checkAuthMiddleware(loginFormHandler)).Methods("GET")
 	router.HandleFunc("/create-room", checkAuthMiddleware(createRoomHandler)).Methods("POST")
 	router.HandleFunc("/newroom", checkAuthMiddleware(newRoomHandler)).Methods("GET")
-	router.HandleFunc("/login", loginHandler).Methods("POST")
+	router.HandleFunc("/login", validateDataMiddleware(loginHandler)).Methods("POST")
 	router.HandleFunc("/echo", echoSocket).Methods("GET")
 	router.HandleFunc("/room", checkAuthMiddleware(roomHandler)).Methods("GET")
 	router.HandleFunc("/registrationform", registrationFormHandler).Methods("GET")
-	router.HandleFunc("/registration", registrationHandler).Methods("POST")
+	router.HandleFunc("/registration", validateDataMiddleware(registrationHandler)).Methods("POST")
 	router.HandleFunc("/", indexHandler).Methods("GET")
 	router.PathPrefix("/templates/").Handler(http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 
@@ -142,7 +145,7 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resultSP, err := currentSqlServer.Query(`EXEC [NewPlanningPokerRoom] @NameRoom=?, @Tasks=?, @Creator=?;`, nameRoom, xmlTasks, userLogin)
+	resultSP, err := currentSqlServer.Query(`EXEC ServerPlanningPoker.[NewPlanningPokerRoom] @NameRoom=?, @Tasks=?, @Creator=?;`, nameRoom, xmlTasks, userLogin)
 	if err != nil {
 		log.Println(err)
 	}
@@ -160,30 +163,29 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 
 /*End point for to enter users*/
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	login := r.FormValue("loginUser")
+	email := r.FormValue("email")
 	password := r.FormValue("password")
-	if len(login) > 0 && len(password) > 0 {
-		resultSP, err := currentSqlServer.Query(`EXEC [CheckUser] ?, ?`, login, password)
+	resultSP, err := currentSqlServer.Query(`EXEC ServerPlanningPoker.[CheckUser] ?, ?`, email, password)
+	if err != nil {
+		log.Println(err)
+	}
+	var resultCkeckUser bool
+	for resultSP.Next() {
+		err := resultSP.Scan(&resultCkeckUser)
 		if err != nil {
-			log.Println(err)
-		}
-		var resultCkeckUser bool
-		for resultSP.Next() {
-			err := resultSP.Scan(&resultCkeckUser)
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
-		if resultCkeckUser {
-			sessionsTool.CreateNewSession(login, r, &w)
-			if r.Header.Get("Referer") == currentServerSettings.ServerHost.ExternalPathToLoginForm {
-				w.Write([]byte(currentServerSettings.ServerHost.ExternalHostName))
-			}
-			return
+			fmt.Println(err)
 		}
 	}
-	w.Write([]byte("Wrong"))
-	return
+	if resultCkeckUser {
+		sessionsTool.CreateNewSession(email, r, &w)
+		if r.Header.Get("Referer") == currentServerSettings.ServerHost.ExternalPathToLoginForm {
+			w.Write([]byte(currentServerSettings.ServerHost.ExternalHostName))
+		}
+		return
+	} else {
+		w.Write([]byte("Unsuccsess"))
+		return
+	}
 }
 
 /*End point to display invitation to enter the room*/
@@ -192,7 +194,7 @@ func roomHandler(w http.ResponseWriter, r *http.Request) {
 	userName := sessionsTool.GetUserLoginSession(r)
 	roomUID := r.URL.Query()["roomId"][0]
 
-	resultSP, err := currentSqlServer.Query(`EXEC [CheckCreator] @email=?, @roomUID=?`, userName, roomUID)
+	resultSP, err := currentSqlServer.Query(`EXEC ServerPlanningPoker.[CheckCreator] @email=?, @roomUID=?`, userName, roomUID)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -251,7 +253,7 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currentSqlServer.Query(`EXEC [CreateConnection] @UUID=?, @RoomGUID=?, @Email=?`, Conn.UUID.String(), Conn.RoomGUID, Conn.UserEmail)
+	currentSqlServer.Query(`EXEC ServerPlanningPoker.[CreateConnection] @UUID=?, @RoomGUID=?, @Email=?`, Conn.UUID.String(), Conn.RoomGUID, Conn.UserEmail)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -313,44 +315,39 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 	structCh := make(chan struct{})
 
-	if len(email) > 0 && len(password) > 0 && len(userName) > 0 {
-		resultSP, err := currentSqlServer.Query(`EXECUTE Add_User @LoginName=?, @Email=?, @Password=?`, userName, email, password)
+	resultSP, err := currentSqlServer.Query(`EXEC ServerPlanningPoker.[Add_User] @LoginName=?, @Email=?, @Password=?`, userName, email, password)
+	if err != nil {
+		log.Println(err)
+	}
+
+	var resultCheck string
+
+	for resultSP.Next() {
+		err := resultSP.Scan(&resultCheck)
 		if err != nil {
-			log.Println(err)
+			fmt.Println(err)
 		}
+	}
+	if resultCheck == "Succsess" {
+		w.Write([]byte(resultCheck))
 
-		var resultCheck string
-
-		for resultSP.Next() {
-			err := resultSP.Scan(&resultCheck)
-			if err != nil {
-				fmt.Println(err)
+		go func(ss *PlanningPokerSettings.ServerSettings) {
+			defer close(structCh)
+			from := mail.NewEmail("Planning poker team", "romaphilomela@yandex.ru")
+			subject := "Successful registration"
+			to := mail.NewEmail("Dear User", email)
+			plainTextContent := "You have successfully registered with Planning-poker"
+			htmlContent := fmt.Sprintf("<strong>You have successfully registered with Planning-poker with login: %s</strong>", userName)
+			message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+			client := sendgrid.NewSendClient(ss.SmtpServer.ApiKey)
+			if _, err := client.Send(message); err != nil {
+				fmt.Println("Error SendMail: ", err)
 			}
-		}
-		if resultCheck == "Succsess" {
-			w.Write([]byte(resultCheck))
-
-			go func(ss *PlanningPokerSettings.ServerSettings) {
-				defer close(structCh)
-				from := mail.NewEmail("Planning poker team", "romaphilomela@yandex.ru")
-				subject := "Successful registration"
-				to := mail.NewEmail("Dear User", email)
-				plainTextContent := "You have successfully registered with Planning-poker"
-				htmlContent := fmt.Sprintf("<strong>You have successfully registered with Planning-poker with login: %s</strong>", userName)
-				message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-				client := sendgrid.NewSendClient(ss.SmtpServer.ApiKey)
-				if _, err := client.Send(message); err != nil {
-					fmt.Println("Error SendMail: ", err)
-				}
-			}(currentServerSettings)
-			<-structCh
-			return
-		} else {
-			w.Write([]byte(resultCheck))
-			return
-		}
+		}(currentServerSettings)
+		<-structCh
+		return
 	} else {
-		w.Write([]byte("pass or email or login was empty"))
+		w.Write([]byte(resultCheck))
 		return
 	}
 }
@@ -420,7 +417,7 @@ func restoreAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 /*End point for post request to restore password*/
 func createRestoreAccountLink(w http.ResponseWriter, r *http.Request) {
-	email := r.FormValue("email-restore")
+	email := r.FormValue("email")
 
 	type ViewData struct {
 		Message string
@@ -429,10 +426,10 @@ func createRestoreAccountLink(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("templates/restore_account.html")
 
 	emailCh := make(chan string)
-	tmplMessage := make(chan ViewData)
+	tmplMessageCh := make(chan ViewData)
 
 	go func() {
-		resultSP, err := currentSqlServer.Query(fmt.Sprintf("EXEC [Check_User_Email] '%s'", email))
+		resultSP, err := currentSqlServer.Query("EXEC ServerPlanningPoker.[Check_User_Email] @Email=?", email)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -450,7 +447,7 @@ func createRestoreAccountLink(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	go func() {
-		resultSP, err := currentSqlServer.Query(fmt.Sprintf("EXEC [CreateAccountRecoveryLink] '%s'", email))
+		resultSP, err := currentSqlServer.Query("EXEC ServerPlanningPoker.[CreateAccountRecoveryLink] @Email=?", email)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -472,22 +469,23 @@ func createRestoreAccountLink(w http.ResponseWriter, r *http.Request) {
 			subject := "An attempt was made to restore your account"
 			to := mail.NewEmail("Dear User", emailCurrCtx)
 			plainTextContent := "An attempt was made to restore your account"
-			htmlContent := fmt.Sprintf("<strong>An attempt was made to restore your account. To change your password, follow the link: %s</strong>", currentServerSettings.ServerHost.ExternalHostName+currentServerSettings.ServerHost.RestoreAccount+recoveryLnk)
+			htmlContent := fmt.Sprintf("<strong>An attempt was made to restore your account. To change your password, follow the link: %s</strong>",
+				currentServerSettings.ServerHost.ExternalHostName+currentServerSettings.ServerHost.RestoreAccount+strings.ToLower(recoveryLnk))
 			message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
 			client := sendgrid.NewSendClient(currentServerSettings.SmtpServer.ApiKey)
 			if _, err := client.Send(message); err != nil {
 				fmt.Println("Error SendMail: ", err)
 			}
-			data := ViewData{Message: "Your account was restored, pls check in your email."}
-			tmplMessage <- data
+			data := ViewData{Message: "An account recovery request has been generated, pls check in your email."}
+			tmplMessageCh <- data
 		} else {
 			data := ViewData{Message: "Such account was not found."}
-			tmplMessage <- data
+			tmplMessageCh <- data
 		}
 
 	}()
 
-	tmpl.Execute(w, <-tmplMessage)
+	tmpl.Execute(w, <-tmplMessageCh)
 }
 
 /*End point to display the restore account  page*/
@@ -508,8 +506,8 @@ func changePasswordFormHandler(w http.ResponseWriter, r *http.Request) {
 func restoreAccountUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	linkRestore := r.FormValue("linkRestore")
 	newPass := r.FormValue("password")
-
-	resultSP, err := currentSqlServer.Query(fmt.Sprintf("EXEC [RestoreAccount] '%s', '%s'", linkRestore, newPass))
+	fmt.Println(r.Header.Get("Referer"))
+	resultSP, err := currentSqlServer.Query(fmt.Sprintf("EXEC ServerPlanningPoker.[RestoreAccount] '%s', '%s'", linkRestore, newPass))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -537,4 +535,90 @@ func restoreAccountUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(w, data)
 	}
 	return
+}
+
+func validateDataMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var checkEmailData = func(w http.ResponseWriter, r *http.Request) {
+			email := r.FormValue("email")
+
+			resultMatchEmail, err := regexp.MatchString(regexpPatternEmail, email)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			if resultMatchEmail == false {
+				http.Redirect(w, r, "/bad-request", 301) //Проверить проверку пароля (не работает)
+				return
+			} else {
+				nextHandler(w, r)
+			}
+		}
+		var checkPasswordData = func(w http.ResponseWriter, r *http.Request) {
+			password := r.FormValue("password")
+
+			validator := validator.New(validator.MinLength(6, nil), validator.MaxLength(24, nil),
+				validator.ContainsOnly(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!#$%&'()*+,-./:;<=>?@[\]^_{|}~`, nil),
+				validator.ContainsAtLeast(`1234567890!#$%&'()*+,-./:;<=>?@[\]^_{|}~`, 1, nil))
+			err := validator.Validate(password)
+			if err != nil {
+				http.Redirect(w, r, "/bad-request", 301) //Проверить проверку пароля (не работает)
+				return
+			} else {
+				nextHandler(w, r)
+			}
+		}
+		var checkLoginFormData = func(w http.ResponseWriter, r *http.Request) {
+			email := r.FormValue("email")
+			password := r.FormValue("password")
+
+			validator := validator.New(validator.MinLength(6, nil), validator.MaxLength(24, nil),
+				validator.ContainsOnly(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!#$%&'()*+,-./:;<=>?@[\]^_{|}~`, nil),
+				validator.ContainsAtLeast(`1234567890!#$%&'()*+,-./:;<=>?@[\]^_{|}~`, 1, nil))
+			err := validator.Validate(password)
+			if err != nil {
+				w.Write([]byte("Unsuccsess")) //Проверить проверку пароля (не работает)
+				return
+			}
+			resultMatchEmail, err := regexp.MatchString(regexpPatternEmail, email)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			if resultMatchEmail == false || err != nil {
+				w.Write([]byte("Unsuccsess")) //Проверить проверку пароля (не работает)
+				return
+			} else {
+				nextHandler(w, r)
+			}
+		}
+		var checkRegistrationFormData = func(w http.ResponseWriter, r *http.Request) {
+			username := r.FormValue("userName")
+
+			validator := validator.New(validator.MinLength(3, nil), validator.MaxLength(24, nil),
+				validator.ContainsOnly(`abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890`, nil))
+			err := validator.Validate(username)
+
+			if err != nil {
+				w.Write([]byte("pass or email or username no valid"))
+				return
+			} else {
+				checkLoginFormData(w, r)
+			}
+		}
+		switch r.Header.Get("Referer") {
+		case currentServerSettings.ServerHost.ExternalPathToNewRoom:
+			checkLoginFormData(w, r)
+		case currentServerSettings.ServerHost.ExternalPathToLoginForm:
+			checkLoginFormData(w, r)
+		case currentServerSettings.ServerHost.ExternalPathToRegistrationForm:
+			checkRegistrationFormData(w, r)
+		case currentServerSettings.ServerHost.ExternalPathToRestoreAccForm:
+			checkEmailData(w, r)
+		case currentServerSettings.ServerHost.ExternalPathToChangePassForm:
+			checkPasswordData(w, r)
+		default:
+			return
+		}
+	}
 }

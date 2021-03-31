@@ -33,11 +33,11 @@ func NewChangesViewModel() *ChangesViewModel {
 	ChangesViewModelOut := ChangesViewModel{
 		Changes: make(map[string]string),
 	}
-	ChangesViewModelOut.Changes["ChangeVote"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
-	ChangesViewModelOut.Changes["ChangeGetVM"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
-	ChangesViewModelOut.Changes["StartVoting"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
-	ChangesViewModelOut.Changes["StopVoting"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
-	ChangesViewModelOut.Changes["FinishPlanning"] = `EXEC [Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+	ChangesViewModelOut.Changes["ChangeVote"] = `EXEC ServerPlanningPoker.[Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+	ChangesViewModelOut.Changes["ChangeGetVM"] = `EXEC ServerPlanningPoker.[Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+	ChangesViewModelOut.Changes["StartVoting"] = `EXEC ServerPlanningPoker.[Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+	ChangesViewModelOut.Changes["StopVoting"] = `EXEC ServerPlanningPoker.[Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
+	ChangesViewModelOut.Changes["FinishPlanning"] = `EXEC ServerPlanningPoker.[Push_And_Get_Changes] @xmlChanges=?, @nameChanges=?, @roomGUID=?, @email=?`
 
 	return &ChangesViewModelOut
 }

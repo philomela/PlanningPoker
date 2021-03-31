@@ -1,5 +1,6 @@
 var socketInst, currentXmlString, currentXml;
 var buttonStartVoting;
+var buttonFinishVoting;
 const coffeeIcon = 999, questionIcon = 777, coffeeIconMedian = "999.00", questionIconMedian = "777.00"
 
 $.extend({
@@ -43,10 +44,13 @@ function parseXmlResponse(currentXml) {
                 
             if (tasks[i].getAttribute('IsCurrentActive') == 1) {
                 
+                $(document).ready(function() {
+                    $(`#task-${tasks[i].getAttribute('Id')}`).css({"pointer-events": "none"})                               
+                });
                 
 
                 $(document).ready(function() {
-                    buttonStartVoting = $(`#start-voting`).prop("disabled", true); 
+                    buttonStartVoting.prop("disabled", true); 
                     buttonStartVoting.css({"background": "#b3b3b3"});
                                        
                 });
@@ -94,6 +98,7 @@ function parseXmlResponse(currentXml) {
                             $('.button-room').css({"pointer-events": "none"});
                             $('.button-room').css({"opacity": "0.25"});
                             $('.preloader-room').css({"display": "block"});
+                            
                         }
                         else{
                             $('.preloader-room').css({"display": "none"});
