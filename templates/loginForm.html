@@ -1,5 +1,4 @@
-<!doctype html>
-<html lang="ru">
+<html lang="en">
 
 <head>
   <meta charset="utf-8">
@@ -60,7 +59,7 @@
           <input type="email" id="login" name="loginUser" class="form-control" placeholder="Enter email">
           <label for="password">Password:</label>
           <input type="password" id="password" name="password" class="form-control" placeholder="Enter password">
-          <p id="warning"></p>
+          <p id="warning">invalid email/password</p>
           <a href="http://localhost:8080/restore-account" class="forgot-pass">Forgot password?</a>
         </div>
         <button id="submit-log" type="submit" class="btn btn-primary">Sign in</button>
@@ -87,22 +86,30 @@
 
   <script type="text/javascript">
     $('#submit-log').click(() => {
-      if (validationEmail.validate($('#login').val())) {
-        $.ajax({
-          type: "POST",
-          url: "../login",
-          data: `email=${$('#login').val()}&password=${$('#password').val()}`,
-          success: function (msg) {
-            if (msg == "Unsuccsess") {
-              $('#warning').text("invalid email/password");
-            }
-            else {
-              window.location.href = msg;
-            }
-          }
-        });
+      $('#warning').css({"display": "none"});
+      
+      if (!validationEmail.validate($('#login').val())) {
+        $('#warning').css({"display": "block"});
+        return
+      }
+      if (!validationPass.validate($('#password').val())) {
+        $('#warning').css({"display": "block"});
+        return
       }
 
+      $.ajax({
+        type: "POST",
+        url: "../login",
+        data: `email=${$('#login').val()}&password=${$('#password').val()}`,
+        success: function (msg) {
+          if (msg == "Unsuccsess") {
+            $('#warning').css({"display": "block"});
+          }
+          else {
+            window.location.href = msg;
+          }
+        }
+      });
     });
 
     $('#signUp').click(() => {

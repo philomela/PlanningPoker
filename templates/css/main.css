@@ -83,6 +83,7 @@ article {
 }
 
 #warning {
+    display: none;
     color: red;
 }
 
@@ -362,7 +363,7 @@ tr, td {
     border: 1px solid #40AA29;
 }
 
-#email-restore{
+#email-restore, #pass-restore{
     width: 60%;
     display: block;
     margin: 0 auto;
@@ -372,4 +373,9 @@ tr, td {
     font-size: 24px;
     color: #6d0e58;
     font-weight: 600;
+}
+
+.notification-email, .notification-pass, .notification-username {
+    color: red;
+    display: none;
 }
