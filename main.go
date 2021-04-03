@@ -606,19 +606,23 @@ func validateDataMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
 				checkLoginFormData(w, r)
 			}
 		}
-		switch r.Header.Get("Referer") {
-		case currentServerSettings.ServerHost.ExternalPathToNewRoom: //Нет обработки когда переходишь по ссылке которой поделилиись
+		rqstURL := r.Header.Get("Referer")
+
+		switch {
+		case currentServerSettings.ServerHost.ExternalPathToNewRoom == rqstURL:
 			checkLoginFormData(w, r)
-		case currentServerSettings.ServerHost.ExternalPathToLoginForm:
+		case currentServerSettings.ServerHost.ExternalPathToLoginForm == rqstURL:
 			checkLoginFormData(w, r)
-		case currentServerSettings.ServerHost.ExternalPathToRegistrationForm:
+		case strings.Contains(rqstURL, "roomId="):
+			checkLoginFormData(w, r)
+		case currentServerSettings.ServerHost.ExternalPathToRegistrationForm == rqstURL:
 			checkRegistrationFormData(w, r)
-		case currentServerSettings.ServerHost.ExternalPathToRestoreAccForm:
+		case currentServerSettings.ServerHost.ExternalPathToRestoreAccForm == rqstURL:
 			checkEmailData(w, r)
-		case currentServerSettings.ServerHost.ExternalPathToChangePassForm:
+		case currentServerSettings.ServerHost.ExternalPathToChangePassForm == rqstURL:
 			checkPasswordData(w, r)
 		default:
-			checkLoginFormData(w, r)
+			return
 		}
 	}
 }
