@@ -71,6 +71,7 @@ func (s *ServerSettings) InitSettingFromEnvVariables(envParam string) {
 		s.ServerHost.ExternalPathToNewRoom = os.Getenv("PLANNING_POKER_EXT_PATH_NEWROOM")
 		s.ServerHost.ExternalPathToRegistrationForm = os.Getenv("PLANNING_POKER_EXT_PATH_REGFORM")
 		s.ServerHost.ExternalPathToRestoreAccForm = os.Getenv("PLANNING_POKER_EXT_PATH_RESTOREACC")
+		s.ServerHost.ExternalPathToChangePassForm = os.Getenv("PLANNING_POKER_EXT_PATH_CHANGEPASS")
 		s.ServerHost.WebSocketProtocol = os.Getenv("PLANNING_POKER_WEBSOCKET_PROTOCOL")
 		s.ServerHost.WebSocketExternalAddress = os.Getenv("PLANNING_POKER_WEBSOCKET_EXTERNALADDRESS")
 		s.SmtpServer.ApiKey = os.Getenv("PLANNING_POKER_SMTP_APIKEY")

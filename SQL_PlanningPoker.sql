@@ -231,11 +231,18 @@ CREATE PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom](@NameRoom VARCHAR(20
         BEGIN TRANSACTION
             BEGIN TRY
                 DECLARE @LastIdRoom INT, @RoomGUID VARCHAR(36) = NEWID();
+				DECLARE @TempTable table (Id INT, [Name] VARCHAR(MAX), 
+										  [TimeDiscussion] TINYINT, 
+										  Created DATETIME2, 
+										  OnActive BIT, 
+										  Completed BIT);
 
                 IF(@NameRoom = '' OR @NameRoom IS NULL)
                 BEGIN
                     ROLLBACK
                 END 
+				
+				
 
                 INSERT INTO ServerPlanningPoker.Rooms (NameRoom, Created, IsActive, Creator, [GUID])
                 VALUES (@NameRoom, CURRENT_TIMESTAMP, 1, (SELECT Id FROM ServerPlanningPoker.Persons WHERE Email = @Creator),  @RoomGUID);

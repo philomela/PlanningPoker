@@ -607,7 +607,7 @@ func validateDataMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
 			}
 		}
 		switch r.Header.Get("Referer") {
-		case currentServerSettings.ServerHost.ExternalPathToNewRoom:
+		case currentServerSettings.ServerHost.ExternalPathToNewRoom: //Нет обработки когда переходишь по ссылке которой поделилиись
 			checkLoginFormData(w, r)
 		case currentServerSettings.ServerHost.ExternalPathToLoginForm:
 			checkLoginFormData(w, r)
@@ -618,7 +618,7 @@ func validateDataMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
 		case currentServerSettings.ServerHost.ExternalPathToChangePassForm:
 			checkPasswordData(w, r)
 		default:
-			return
+			checkLoginFormData(w, r)
 		}
 	}
 }
