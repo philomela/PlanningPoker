@@ -157,6 +157,10 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 	}
+	if newGUIDRoom == "error" {
+		w.Write([]byte("error"))
+		return
+	}
 	w.Write([]byte(currentServerSettings.ServerHost.ExternalHostName + currentServerSettings.ServerHost.Room + strings.ToLower(newGUIDRoom)))
 	return
 }

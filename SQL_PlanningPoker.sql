@@ -231,19 +231,19 @@ CREATE PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom](@NameRoom VARCHAR(20
         BEGIN TRANSACTION
             BEGIN TRY
                 DECLARE @LastIdRoom INT, @RoomGUID VARCHAR(36) = NEWID();
-				DECLARE @TempTable table (Id INT, [Name] VARCHAR(MAX), 
-										  [TimeDiscussion] TINYINT, 
-										  Created DATETIME2, 
-										  OnActive BIT, 
-										  Completed BIT);
+				
+                IF (1 = ServerPlanningPoker.[IsNullOrEmpty](@Tasks))
+                BEGIN
+                    SELECT 'error';
+                    RETURN;                            
+                END
 
                 IF(@NameRoom = '' OR @NameRoom IS NULL)
-                BEGIN
-                    ROLLBACK
+                BEGIN     
+                    SELECT 'error';
+                    RETURN;                   
                 END 
 				
-				
-
                 INSERT INTO ServerPlanningPoker.Rooms (NameRoom, Created, IsActive, Creator, [GUID])
                 VALUES (@NameRoom, CURRENT_TIMESTAMP, 1, (SELECT Id FROM ServerPlanningPoker.Persons WHERE Email = @Creator),  @RoomGUID);
 
@@ -259,9 +259,11 @@ CREATE PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom](@NameRoom VARCHAR(20
                          FROM @Tasks.nodes('/tasks/task') T(C);                 
                 COMMIT;
                 SELECT TOP(1) Rooms.[GUID] FROM ServerPlanningPoker.Rooms AS Rooms ORDER BY Id DESC;
+                RETURN;
             END TRY
             BEGIN CATCH
                 ROLLBACK;
+                RETURN;
             END CATCH
 GO 
 
@@ -540,4 +542,54 @@ DROP PROCEDURE ServerPlanningPoker.[SaveError]
 DROP SCHEMA [ServerPlanningPoker]
 
 SELECT * FROM ServerPlanningPoker.RestoredAccounts
+SELECT * FROM ServerPlanningPoker.Persons
+
+
+
+DECLARE @Tasks XML = ''
+
+
+DECLARE @TempTable table (Id INT, [Name] VARCHAR(MAX), 
+										  [TimeDiscussion] TINYINT, 
+										  Created DATETIME2, 
+										  OnActive BIT, 
+										  Completed BIT);
+
+                        SELECT C.value('@name', 'nvarchar(max)'),
+                               C.value('@time-discussion', 'tinyint'),
+                         FROM @Tasks.nodes('/tasks/task') T(C); 
+
+GO
+
+CREATE FUNCTION ServerPlanningPoker.[IsNullOrEmpty](@XmlIn XML) 
+    RETURNS BIT
+    AS
+        BEGIN
+        DECLARE @OutVal BIT;
+        DECLARE @TempTable table ([Name] NVARCHAR(MAX), 
+							      [TimeDiscussion] TINYINT);
+            INSERT INTO @TempTable                        
+            SELECT C.value('@name', 'nvarchar(max)'),
+                   C.value('@time-discussion', 'tinyint')
+            FROM @XmlIn.nodes('/tasks/task') T(C); 
+
+            IF EXISTS(SELECT 1 FROM @TempTable WHERE [Name] = '' 
+            OR [Name] IS NULL 
+            OR [TimeDiscussion] = 0 
+            OR [TimeDiscussion] NOT BETWEEN 0 AND 30)
+                BEGIN
+                    SET @OutVal = 1;
+                END
+            ELSE 
+                BEGIN
+                    SET @OutVal = 0;
+                END
+            DELETE @TempTable;
+            RETURN @OutVal;
+        END
+GO
+
+DROP FUNCTION ServerPlanningPoker.[IsNullOrEmpty]
+
+
 SELECT * FROM ServerPlanningPoker.Persons

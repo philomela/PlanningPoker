@@ -379,3 +379,8 @@ tr, td {
     color: red;
     display: none;
 }
+
+.error-data-new-room {
+    display: none;
+    color: red;
+}

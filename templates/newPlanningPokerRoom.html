@@ -67,6 +67,7 @@
             <div class="row justify-content-center">
                 <div class="col-lg-6">
                     <div class="form-group name-meeting-block">
+                        <p class="error-data-new-room">Your data was uncorrectly. Name meeting can't be empty. Tasks can't be empty. And time discussion can't be empty or not between 1 and 30 minutes</p>
                         <label for="name-meeting">Name meeting:</label>
                         <input type="text" class="form-control" id="name-meeting" name="name-meeting">
                     </div>
@@ -157,6 +158,7 @@
                 _xmlForSend += `${Array.from(tasks)[i]}time-discussion="${timeCollection[i].value}"/>`;
             }
             _xmlForSend += "</tasks>";
+            tasksCollection = null;
             console.log(_xmlForSend);
             return _xmlForSend;
             console.log(_xmlForSend);
@@ -173,6 +175,8 @@
         });
 
         $('#push-tasks').click(() => {
+            xmlTasks = null
+            $(".error-data-new-room").css({"display": "none"})
             nameRoom = $('#name-meeting').val();
             xmlTasks = createXml();
 
@@ -181,6 +185,11 @@
                 url: "../create-room",
                 data: `nameRoom=${nameRoom}&xmlTasks=${xmlTasks}`,
                 success: function (msg) {
+                    switch (msg){
+                        case "error":
+                            $(".error-data-new-room").css({"display": "block"});
+                            return;
+                    }
                     $('#link-room').val(msg);
                 }
             });
