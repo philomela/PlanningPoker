@@ -33,7 +33,7 @@
                             <ul class="navbar-nav mr-auto">
                                 <li class="nav-item active">
                                     <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-                                </li>                           
+                                </li>
                             </ul>
                             <form class="form-inline">
                                 <button id="signUp" class="btn btn-outline-success" type="button">Sign Up</button>
@@ -67,7 +67,8 @@
             <div class="row justify-content-center">
                 <div class="col-lg-6">
                     <div class="form-group name-meeting-block">
-                        <p class="error-data-new-room">Your data was uncorrectly. Name meeting can't be empty. Tasks can't be empty. And time discussion can't be empty or not between 1 and 30 minutes</p>
+                        <p class="error-data-new-room">Your data was uncorrectly. Name meeting can't be empty. Tasks
+                            can't be empty. And time discussion can't be empty or not between 1 and 10 minutes</p>
                         <label for="name-meeting">Name meeting:</label>
                         <input type="text" class="form-control" id="name-meeting" name="name-meeting">
                     </div>
@@ -93,7 +94,8 @@
                 <div class="col-lg-1">
                     <div class="form-group task-timer">
                         <label for="time-discussion">Minutes:</label>
-                        <input type="number" min="1" max="10" class="form-control time-discuss" id="time-discussion" name="time-task">
+                        <input type="number" min="1" max="10" class="form-control time-discuss" id="time-discussion"
+                            name="time-task">
                     </div>
                 </div>
 
@@ -127,7 +129,7 @@
             </div>
 
         </div>
-        
+
     </article>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"
@@ -142,31 +144,34 @@
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
         crossorigin="anonymous"></script>
 
+    <script src="templates/js/validations.js"></script>
+
     <script type="text/javascript">
         let xmlTasks, nameRoom, tasks = new Set();
         function createXml() {
-            _xmlForSend = '<tasks>'
+            let _xmlForSend = '<tasks>'
             //tasksCollection = new Set();
-            tasksCollection = $('.tasks-controls').children('#task');
-            timeCollection = $('.task-timer').children('#time-discussion');
-            for (var element of tasksCollection) {
+            let tasksCollection = $('.tasks-controls').children('#task');
+            let timeCollection = $('.task-timer').children('#time-discussion');
+            for (let element of tasksCollection) {
                 tasks.add(`<task name="${element.value}" `);
             }
             console.log(tasks);
-            
-            for (var i = 0; i < timeCollection.length; i++) {
+
+            for (let i = 0; i < timeCollection.length; i++) {
                 _xmlForSend += `${Array.from(tasks)[i]}time-discussion="${timeCollection[i].value}"/>`;
             }
             _xmlForSend += "</tasks>";
-            tasksCollection = null;
-            console.log(_xmlForSend);
+            
+            tasks.clear()
             return _xmlForSend;
-            console.log(_xmlForSend);
+            
+            
         }
 
         $('#change-location').click(() => {
             //console.log($('#link-room').val());
-            location.href=$('#link-room').val();
+            location.href = $('#link-room').val();
         });
 
         $('#add-new-task').click(() => {
@@ -176,18 +181,37 @@
 
         $('#push-tasks').click(() => {
             xmlTasks = null
-            $(".error-data-new-room").css({"display": "none"})
+            nameRoom = null
+            
+            
+            //currentXmlTasks = null
+            $(".error-data-new-room").css({ "display": "none" })
             nameRoom = $('#name-meeting').val();
             xmlTasks = createXml();
+
+            
+
+            let parserXml = new DOMParser();
+            let currentXmlTasks = parserXml.parseFromString(xmlTasks, "text/xml");
+
+            let tasksForSend = currentXmlTasks.getElementsByTagName('tasks')[0].getElementsByTagName('task')
+
+            if (!validationNameRoom.validateNameRoom(nameRoom) ||
+                !validationNameRoom.validateTasksNames(tasksForSend) ||
+                !validationNameRoom.validateTimeDiscussions(tasksForSend)) {
+                $(".error-data-new-room").css({ "display": "block" });
+                return false
+            }
+
 
             $.ajax({
                 type: "POST",
                 url: "../create-room",
                 data: `nameRoom=${nameRoom}&xmlTasks=${xmlTasks}`,
                 success: function (msg) {
-                    switch (msg){
+                    switch (msg) {
                         case "error":
-                            $(".error-data-new-room").css({"display": "block"});
+                            $(".error-data-new-room").css({ "display": "block" });
                             return;
                     }
                     $('#link-room').val(msg);
@@ -196,7 +220,8 @@
         });
 
         $('#signUp').click(() => {
-                window.location.href="/registrationform";})
+            window.location.href = "/registrationform";
+        })
     </script>
 
 

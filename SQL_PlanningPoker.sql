@@ -576,7 +576,7 @@ CREATE FUNCTION ServerPlanningPoker.[IsNullOrEmpty](@XmlIn XML)
             IF EXISTS(SELECT 1 FROM @TempTable WHERE [Name] = '' 
             OR [Name] IS NULL 
             OR [TimeDiscussion] = 0 
-            OR [TimeDiscussion] NOT BETWEEN 0 AND 30)
+            OR [TimeDiscussion] NOT BETWEEN 0 AND 10)
                 BEGIN
                     SET @OutVal = 1;
                 END
