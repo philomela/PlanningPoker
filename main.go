@@ -18,6 +18,9 @@ import (
 	"github.com/go-passwd/validator"
 	"github.com/google/uuid"
 
+	"crypto/md5"
+	"encoding/hex"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/sendgrid/sendgrid-go"
@@ -57,7 +60,7 @@ func main() {
 	router.HandleFunc("/restore-password", validateDataMiddleware(createRestoreAccountLink)).Methods("POST")
 	router.HandleFunc("/restore-account", restoreAccountHandler).Methods("GET")
 	router.HandleFunc("/change-password-form", changePasswordFormHandler).Methods("GET")
-	router.HandleFunc("/update-password", restoreAccountUpdateHandler).Methods("POST")
+	router.HandleFunc("/update-password", validateDataMiddleware(restoreAccountUpdateHandler)).Methods("POST")
 	router.HandleFunc("/rooms", checkAuthMiddleware(roomsHandler)).Queries("roomId", "")
 	router.HandleFunc("/loginform", checkAuthMiddleware(loginFormHandler)).Methods("GET")
 	router.HandleFunc("/create-room", checkAuthMiddleware(createRoomHandler)).Methods("POST")
@@ -168,18 +171,23 @@ func createRoomHandler(w http.ResponseWriter, r *http.Request) {
 /*End point for to enter users*/
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
-	password := r.FormValue("password")
-	resultSP, err := currentSqlServer.Query(`EXEC ServerPlanningPoker.[CheckUser] ?, ?`, email, password)
+	passwordMd5 := md5.Sum([]byte(r.FormValue("password")))
+	passHash := hex.EncodeToString(passwordMd5[:])
+	fmt.Println(passHash)
+	resultSP, err := currentSqlServer.Query(`EXEC ServerPlanningPoker.[CheckUser] ?, ?`, email, passHash)
 	if err != nil {
 		log.Println(err)
 	}
+
 	var resultCkeckUser bool
+
 	for resultSP.Next() {
 		err := resultSP.Scan(&resultCkeckUser)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
+
 	if resultCkeckUser {
 		sessionsTool.CreateNewSession(email, r, &w)
 		if r.Header.Get("Referer") == currentServerSettings.ServerHost.ExternalPathToLoginForm {
@@ -316,10 +324,12 @@ func echoSocket(w http.ResponseWriter, r *http.Request) {
 func registrationHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	userName := r.FormValue("userName")
-	password := r.FormValue("password")
+	passwordMd5 := md5.Sum([]byte(r.FormValue("password")))
+	passHash := hex.EncodeToString(passwordMd5[:])
+
 	structCh := make(chan struct{})
 
-	resultSP, err := currentSqlServer.Query(`EXEC ServerPlanningPoker.[Add_User] @LoginName=?, @Email=?, @Password=?`, userName, email, password)
+	resultSP, err := currentSqlServer.Query(`EXEC ServerPlanningPoker.[Add_User] @LoginName=?, @Email=?, @Password=?`, userName, email, passHash)
 	if err != nil {
 		log.Println(err)
 	}
@@ -552,7 +562,7 @@ func validateDataMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
 			}
 
 			if resultMatchEmail == false {
-				http.Redirect(w, r, "/bad-request", 301) //Проверить проверку пароля (не работает)
+				w.WriteHeader(400) //Проверить проверку пароля (не работает)
 				return
 			} else {
 				nextHandler(w, r)
@@ -566,7 +576,7 @@ func validateDataMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
 				validator.ContainsAtLeast(`1234567890!#$%&'()*+,-./:;<=>?@[\]^_{|}~`, 1, nil))
 			err := validator.Validate(password)
 			if err != nil {
-				http.Redirect(w, r, "/bad-request", 301) //Проверить проверку пароля (не работает)
+				w.WriteHeader(400) //Проверить проверку пароля (не работает)
 				return
 			} else {
 				nextHandler(w, r)
@@ -621,9 +631,9 @@ func validateDataMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
 			checkLoginFormData(w, r)
 		case currentServerSettings.ServerHost.ExternalPathToRegistrationForm == rqstURL:
 			checkRegistrationFormData(w, r)
-		case currentServerSettings.ServerHost.ExternalPathToRestoreAccForm == rqstURL:
+		case currentServerSettings.ServerHost.ExternalPathToRestoreAcc == rqstURL:
 			checkEmailData(w, r)
-		case currentServerSettings.ServerHost.ExternalPathToChangePassForm == rqstURL:
+		case strings.Contains(rqstURL, "linkRestore="):
 			checkPasswordData(w, r)
 		default:
 			return

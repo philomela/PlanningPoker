@@ -11,5 +11,6 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/sendgrid/rest v2.6.3+incompatible // indirect
 	github.com/sendgrid/sendgrid-go v3.8.0+incompatible
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/net v0.0.0-20210323141857-08027d57d8cf // indirect
 )

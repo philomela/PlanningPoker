@@ -45,7 +45,7 @@ CREATE TABLE ServerPlanningPoker.Persons(
     Id INT PRIMARY KEY IDENTITY,
     LoginName VARCHAR(50) UNIQUE NOT NULL,
     Email VARCHAR(100) UNIQUE NOT NULL,
-    [Password] VARCHAR(100),
+    [Password] VARCHAR(300),
     [Token] VARCHAR(36)   
 )
 GO
@@ -589,7 +589,17 @@ CREATE FUNCTION ServerPlanningPoker.[IsNullOrEmpty](@XmlIn XML)
         END
 GO
 
+CREATE PROCEDURE ServerPlanningPoker.[Get_Password] (@Email VARCHAR(100))
+    AS
+        SELECT [Password] 
+        FROM ServerPlanningPoker.Persons 
+            WHERE Email = @Email
+GO
+
+
 DROP FUNCTION ServerPlanningPoker.[IsNullOrEmpty]
 
 
 SELECT * FROM ServerPlanningPoker.Persons
+
+SELECT * FROM ServerPlanningPoker.Persons WHERE Email = 'a@ya.ru' AND [Password] = 'd0ecd71eb52758b4fd44243d8fdd0711'
