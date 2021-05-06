@@ -173,7 +173,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	passwordMd5 := md5.Sum([]byte(r.FormValue("password")))
 	passHash := hex.EncodeToString(passwordMd5[:])
-	fmt.Println(passHash)
 	resultSP, err := currentSqlServer.Query(`EXEC ServerPlanningPoker.[CheckUser] ?, ?`, email, passHash)
 	if err != nil {
 		log.Println(err)
@@ -519,9 +518,9 @@ func changePasswordFormHandler(w http.ResponseWriter, r *http.Request) {
 /*End point for change password*/
 func restoreAccountUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	linkRestore := r.FormValue("linkRestore")
-	newPass := r.FormValue("password")
-	fmt.Println(r.Header.Get("Referer"))
-	resultSP, err := currentSqlServer.Query(fmt.Sprintf("EXEC ServerPlanningPoker.[RestoreAccount] '%s', '%s'", linkRestore, newPass))
+	passwordMd5 := md5.Sum([]byte(r.FormValue("password")))
+	passHash := hex.EncodeToString(passwordMd5[:])
+	resultSP, err := currentSqlServer.Query("EXEC ServerPlanningPoker.[RestoreAccount] @Link=?, @Password=?", linkRestore, passHash)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -551,6 +550,7 @@ func restoreAccountUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+/*Middleware for check validation fields*/
 func validateDataMiddleware(nextHandler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var checkEmailData = func(w http.ResponseWriter, r *http.Request) {
