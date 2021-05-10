@@ -1,5 +1,5 @@
-<!doctype html>
-<html lang="ru">
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
@@ -10,7 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400;1,600;1,700;1,800&display=swap"
         rel="stylesheet">
-    <title>Creating new room| Planning Poker</title>
+    <title>Creating new room | Planning Poker</title>
 </head>
 
 <body>
@@ -127,14 +127,9 @@
 
                 </div>
             </div>
-
         </div>
-
     </article>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"
-        integrity="sha512-2AL/VEauKkZqQU9BHgnv48OhXcJPx9vdzxN1JrKDVc4FPU/MEE/BZ6d9l0mP7VmvLsjtYwqiYQpDskK9dG8KBA=="
-        crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.js"
         integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
@@ -150,7 +145,6 @@
         let xmlTasks, nameRoom, tasks = new Set();
         function createXml() {
             let _xmlForSend = '<tasks>'
-            //tasksCollection = new Set();
             let tasksCollection = $('.tasks-controls').children('#task');
             let timeCollection = $('.task-timer').children('#time-discussion');
             for (let element of tasksCollection) {
@@ -165,12 +159,9 @@
             
             tasks.clear()
             return _xmlForSend;
-            
-            
         }
 
         $('#change-location').click(() => {
-            //console.log($('#link-room').val());
             location.href = $('#link-room').val();
         });
 
@@ -182,14 +173,9 @@
         $('#push-tasks').click(() => {
             xmlTasks = null
             nameRoom = null
-            
-            
-            //currentXmlTasks = null
             $(".error-data-new-room").css({ "display": "none" })
             nameRoom = $('#name-meeting').val();
             xmlTasks = createXml();
-
-            
 
             let parserXml = new DOMParser();
             let currentXmlTasks = parserXml.parseFromString(xmlTasks, "text/xml");
@@ -202,7 +188,6 @@
                 $(".error-data-new-room").css({ "display": "block" });
                 return false
             }
-
 
             $.ajax({
                 type: "POST",
@@ -223,9 +208,5 @@
             window.location.href = "/registrationform";
         })
     </script>
-
-
-
 </body>
-
 </html>
