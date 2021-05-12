@@ -36,7 +36,7 @@ const validationNameRoom = {
     },
     validateTimeDiscussions: function (tasks) {
         for(let task of tasks){
-            console.log(task.getAttribute('time-discussion'))
+            
             if (task.getAttribute('time-discussion') >= 1 && task.getAttribute('time-discussion') <= 10)
                 continue;
             else return false;
