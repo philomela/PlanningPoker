@@ -150,7 +150,7 @@
             for (let element of tasksCollection) {
                 tasks.add(`<task name="${element.value}" `);
             }
-            console.log(tasks);
+            
 
             for (let i = 0; i < timeCollection.length; i++) {
                 _xmlForSend += `${Array.from(tasks)[i]}time-discussion="${timeCollection[i].value}"/>`;

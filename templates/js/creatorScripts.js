@@ -12,8 +12,6 @@ $(document).on('click', '.task-room', (e) => {
     e.preventDefault()
     selectedTaskId = e.target.id.split('-')[1];
     startVotingData = `<Change><StartVoting taskId="${selectedTaskId}" isCurrentActive="1"/></Change>`
-    
-    console.log(selectedTaskId)
 });
 
 $('#finish-voting').click(() => {

@@ -130,7 +130,7 @@
 
             var parserXml = new DOMParser();
             currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
-            console.log(currentXml.getElementsByTagName('Error')[0], currentXml);
+            
             if (currentXml.getElementsByTagName('Room')[0].getAttribute('Error') == "UnknownRoom") {
                 document.location.href = "unknownroom";
             }

@@ -33,12 +33,12 @@ function parseXmlResponse(currentXml) {
         }
     var nameMeeting = currentXml.getElementsByTagName('Room')[0].getAttribute('NameRoom');
     if (nameMeeting != null & persons != undefined) {
-        console.log(nameMeeting)
+        
         $('.name-meeting h1').text(nameMeeting);
     }
     var tasks = currentXml.getElementsByTagName('Tasks')[0].getElementsByTagName('Task')
     if (tasks != null && tasks != undefined) {
-        console.log(tasks)
+        
              
         for (let i = 0; i < tasks.length; i++) {
                 
@@ -139,8 +139,7 @@ function parseXmlResponse(currentXml) {
                     }
                 }
                 var currentMedian = tasks[i].getAttribute('Median');
-                console.log(typeof(currentMedian))
-                console.log(typeof(coffeeIconMedian))
+                
                 if (!currentMedian){
                     currentMedian = "Unknown";
                 }
@@ -171,20 +170,20 @@ function StartTimerTask(initTime) {
         return
 
     var timeTask = initTime * 60, stopTime = timeTask * 1000;
-    console.log(timeTask)
+    
         timerTask = setInterval(() => {
         timeTask -= 1;
         timeTaskOut = `${Math.trunc(timeTask / 60) }-m: ${Math.trunc(timeTask % 60)}-sec`
         $('.is-current-active-1').next().text(timeTaskOut);
         $('.is-current-active-1').next().css({"background": "#6a155d", "color": "white", "padding": "3px"})
-        console.log(timeTask);
+        
     }, 1000)
     setTimeout(() => { 
         clearInterval(timerTask); 
         timerStarted = false; //Пересмотреть логику когда никто не проголосовал за задачу, после истечения таймера пропадает complete
         $('.is-current-active-1').next().text("Completed");
     }, stopTime)
-    console.log(stopTime)
+    
 }
 
 $(document).on('click', '.button-room', (e) => {
