@@ -1,2 +1,1 @@
-*.less linguist-vendored=false
-*.scss linguist-vendored=false
+templates/fontawesome-4.7.0/* linguist-vendored
