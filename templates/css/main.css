@@ -2,17 +2,14 @@ body {
     font-family: 'Open Sans', sans-serif;
     background-color: #f8f9fa;
 }
-header {
-    
-}
+
 main {
     position: relative;
     z-index: 1;
     background: url('/templates/img/igralnye-kosti.png');
     background-size: cover;
-    --background-image: url('/templates/img/igralnye-kosti.png');
-    --background-color: #48173e; 
 }
+
 main:after {
     position: absolute;
     z-index: 2;
@@ -21,41 +18,27 @@ main:after {
     left: 0;
     bottom: 0;
     right: 0;
-    --background-image: url('/templates/img/igralnye-kosti.png');
     background-size: cover;
     background: linear-gradient(to top left, rgba(30, 90, 165, 0.3), rgba(109, 14, 88, 0.3));
-    --background-color: #48173e; 
 }
+
 .main-slide {
     height: 350px;
 }
+
 .left-main-block {
     z-index: 3;  
     color: #FCF8FF;
 }
+
 .right-main-block {
     z-index: 3;
     color: #FCF8FF;
 }
-.controls-block {
-    --height: 200px;
-}
+
 .create-room {
     background-color: #40AA29;
     color: white;
-    --width: 300px;
-}
-article {
-    --height: 400px;
-}
-.left-article-block  {
-    
-}
-.right-article-block {
-
-}
-.article-img {
-    --display: inline-block;
 }
 
 .title-slide-section {
@@ -76,6 +59,7 @@ article {
     color: #40AA29;
     border: 1px solid #40AA29;
 }
+
 .btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
     color: #f8f9fa;
     background: #40AA29;
@@ -87,13 +71,6 @@ article {
     color: red;
 }
 
-.main-room {
-    --background-color: bisque;
-    --border-left: 1px solid black;
-    --border-right: 1px solid black;
-    --height: 500px;
-}
-
 .name-room {
     font-size: 18px;
     font-weight: bold;
@@ -103,7 +80,6 @@ article {
     font-size: 12px; 
     color: white;
 }
-
 
 tr, td {
     border: 1px solid black;
@@ -127,18 +103,15 @@ tr, td {
 }
 
 .left-menu-room {
-    --background-color: bisque;
     font-size: 12px;
-    --height: 500px;
     box-shadow: 20px 0px 20px rgba(0,0,0,0.25);
 }
 
 .right-menu-room {
-    --background-color: blue;
     list-style-type: none;
-    --height: 500px;
     box-shadow: -20px 0px 20px rgba(0,0,0,0.25);
 }
+
 .right-menu-room ul {
     padding: 0;
 }
@@ -151,28 +124,16 @@ tr, td {
 
 .footer-container-results {
     margin-top: 20px; 
-    --background: url(/templates/img/footer-pattern.png) #52113c;
     background: linear-gradient(to top left, #1e5aa5, #6d0e58);
     box-shadow: 0 -8px 15px rgba(0,0,0,0.35);
-    --background-color: #52113c;
     padding-top: 20px;
     padding-bottom: 20px;
 }
 
 .task-room {
-    --border: 1px solid black;
-    --border-radius: 10px;
     margin-bottom: 5px;
     display: inline-block;
     width: 80%;
-}
-
-.tsk-tb {
-    --background-color: #52113c;
-}
-
-.tsk-tb-nested {
-    --background-color: #4e2540;
 }
 
 #tb-results {
@@ -189,10 +150,6 @@ tr, td {
     padding: 3px;
 }
 
-.is-current-active-0 {
-    
-}
-
 .time-task-discussion {
     display: inline-block;
     width: 20%;
@@ -204,8 +161,6 @@ tr, td {
 }
 
 .button-room {
-    --width: 100px;
-    --height: 300px;
     background-color: white;
     border-radius: 10px;
     border: none;
@@ -237,7 +192,6 @@ tr, td {
 }
 
 .finish-voting-btn {
-    --width: 100px;
     background-color: #b3b3b3;
     border-radius: 3px;
     border: none;
@@ -247,8 +201,6 @@ tr, td {
 }
 
 .finish-planning-btn {
-    --width: 100px;
-    --border-radius: 3px;
     border: none;
     background-color: #4f357c;
     font-size: 14px;
@@ -311,7 +263,6 @@ tr, td {
     color: white;
     z-index: 3;
     top: 150;
-    --left:20%;
 }
 
 .enter-the-room h3 a {
@@ -322,13 +273,9 @@ tr, td {
     text-decoration: underline;
 }
 
-
-
 .enter-text-room {
     position: relative;
-    --margin-top: 30%;
 }
-
 
 .forgot-pass {
     display: block;
@@ -378,4 +325,9 @@ tr, td {
 .notification-email, .notification-pass, .notification-username {
     color: red;
     display: none;
+}
+
+.error-data-new-room {
+    display: none;
+    color: red;
 }

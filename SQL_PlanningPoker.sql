@@ -1,12 +1,12 @@
-/*Подключаемся к бд*/
+/*Connect DB*/
 USE u0932131_planningPoker
 GO
 
-/*Создаем схему в бд для системных таблиц сервера*/
+/*Create schema in db for system tables*/
 CREATE SCHEMA ServerPlanningPoker AUTHORIZATION u0932131_admin
 GO
 
-/*Таблица ошибок сервера*/
+/*Errors table*/
 CREATE TABLE ServerPlanningPoker.ErrorsLog_Server (
     Id INT PRIMARY KEY IDENTITY,
     ErrorText VARCHAR(MAX) NOT NULL,
@@ -14,8 +14,8 @@ CREATE TABLE ServerPlanningPoker.ErrorsLog_Server (
 )
 GO
 
-/*Хранимая процедура добавления ошибок в таблицу*/
-CREATE PROCEDURE [SaveError](@ErrorText VARCHAR(MAX))
+/*Proc for add errors in error table*/
+CREATE PROCEDURE ServerPlanningPoker.[SaveError](@ErrorText VARCHAR(MAX))
     AS
         BEGIN TRANSACTION
             BEGIN TRY
@@ -28,11 +28,7 @@ CREATE PROCEDURE [SaveError](@ErrorText VARCHAR(MAX))
             END CATCH
 GO
 
-/*Создаем схему в бд для таблиц бизнес модели сервера*/
-CREATE SCHEMA PlanningPokerBuisness AUTHORIZATION u0932131_admin
-GO
-
-/*Таблица комнат*/
+/*Rooms table*/
 CREATE TABLE ServerPlanningPoker.Rooms(
     Id INT PRIMARY KEY IDENTITY,
     NameRoom VARCHAR(200) NOT NULL,
@@ -44,17 +40,17 @@ CREATE TABLE ServerPlanningPoker.Rooms(
 )
 GO
 
-/*Таблица пользователей*/
+/*Users table*/
 CREATE TABLE ServerPlanningPoker.Persons(
     Id INT PRIMARY KEY IDENTITY,
     LoginName VARCHAR(50) UNIQUE NOT NULL,
     Email VARCHAR(100) UNIQUE NOT NULL,
-    [Password] VARCHAR(100),
+    [Password] VARCHAR(300),
     [Token] VARCHAR(36)   
 )
 GO
 
-/*Таблица коннекшинов*/
+/*Connections table*/
 CREATE TABLE ServerPlanningPoker.Connections(
     Id INT PRIMARY KEY IDENTITY,
     [GUID] VARCHAR(36),
@@ -64,7 +60,7 @@ CREATE TABLE ServerPlanningPoker.Connections(
 )
 GO 
  
-/*Таблица наблюдаемого(Активные вью модели)*/
+/*ViewModels table*/
 CREATE TABLE ServerPlanningPoker.ViewModels(
     Id INT PRIMARY KEY IDENTITY,
     Source XML,
@@ -73,7 +69,7 @@ CREATE TABLE ServerPlanningPoker.ViewModels(
 )
 GO
 
-/*Таблица задач*/
+/*Tasks table*/
 CREATE TABLE ServerPlanningPoker.Tasks(
     Id INT PRIMARY KEY IDENTITY,
     [Name] VARCHAR(MAX) NOT NULL,
@@ -81,11 +77,12 @@ CREATE TABLE ServerPlanningPoker.Tasks(
     Created DATETIME2,
     OnActive BIT NOT NULL,
     Completed BIT NOT NULL,
+    DateComplited DATETIME2 NOT NULL DEFAULT CURRENT_TIMESTAMP,
     RoomId INT REFERENCES ServerPlanningPoker.Rooms (Id) ON DELETE CASCADE
 )
 GO
 
-/*Таблица голосов и оценок задач*/
+/*Votes and voices table*/
 CREATE TABLE ServerPlanningPoker.Votes(
     Id INT PRIMARY KEY IDENTITY,
     Vote BIT NOT NULL,
@@ -96,6 +93,7 @@ CREATE TABLE ServerPlanningPoker.Votes(
 )
 GO
 
+/*Task results table*/
 CREATE TABLE ServerPlanningPoker.TasksResults(
     Id INT PRIMARY KEY IDENTITY,
     Median DECIMAL(9,2),
@@ -105,6 +103,17 @@ CREATE TABLE ServerPlanningPoker.TasksResults(
 )
 GO
 
+/*Restored accounts table*/
+CREATE TABLE ServerPlanningPoker.RestoredAccounts(
+    Id INT PRIMARY KEY IDENTITY,
+    DateRequest DATETIME2 NOT NULL,
+    Link VARCHAR(100) NOT NULL,
+    IsActive BIT NOT NULL,
+    AccountId INT NOT NULL FOREIGN KEY REFERENCES ServerPlanningPoker.Persons (Id) ON DELETE CASCADE
+)
+GO
+
+/*Score-dictionary table*/
 CREATE TABLE ServerPlanningPoker.Scores_Dictionary (
     Id INT PRIMARY KEY IDENTITY,
     Score INT NOT NULL,
@@ -112,14 +121,15 @@ CREATE TABLE ServerPlanningPoker.Scores_Dictionary (
 )
 GO
 
+/*Init insert score-dictionary table*/
 INSERT INTO ServerPlanningPoker.Scores_Dictionary(Score, [Decryption])
         VALUES(999, 'Coffee break')
               ,(777, 'Question')
               ,(0, 'Not voice')
 GO
 
-/*Процедура добавление нового пользователя*/
-CREATE PROCEDURE [Add_User](@LoginName VARCHAR(50), 
+/*Proc add new user*/
+CREATE PROCEDURE ServerPlanningPoker.[Add_User](@LoginName VARCHAR(50), 
                             @Email VARCHAR(100), 
                             @Password VARCHAR(30))
     AS 
@@ -150,14 +160,90 @@ CREATE PROCEDURE [Add_User](@LoginName VARCHAR(50),
                 END CATCH
 GO
 
-/*Процедура формирования новой комнаты*/
-CREATE PROCEDURE [NewPlanningPokerRoom](@NameRoom VARCHAR(200), 
+/*Proc restore account*/
+CREATE PROCEDURE ServerPlanningPoker.[RestoreAccount] (@Link VARCHAR(100),
+                                   @Password VARCHAR(100))
+    AS
+        BEGIN TRANSACTION
+            BEGIN TRY 
+                IF 1 = (SELECT IsActive FROM ServerPlanningPoker.RestoredAccounts WHERE Link = @Link) 
+                    BEGIN             
+                        UPDATE ServerPlanningPoker.Persons
+                        SET [Password] = @Password
+                        WHERE Id = (SELECT TOP(1) AccountId 
+                                                    FROM ServerPlanningPoker.RestoredAccounts 
+                                                        WHERE Link = @Link ORDER BY Id DESC);
+                        UPDATE ServerPlanningPoker.RestoredAccounts
+                        SET IsActive = 0
+                        WHERE Link = @Link;
+                    SELECT 1;
+                    END
+                ELSE SELECT 0;
+                COMMIT;
+            END TRY 
+
+            BEGIN CATCH
+                SELECT 0;
+                ROLLBACK;
+            END CATCH
+GO
+
+/*Proc create link for restore account*/
+CREATE PROCEDURE ServerPlanningPoker.[CreateAccountRecoveryLink] (@Email VARCHAR(100))
+    AS
+        BEGIN TRANSACTION
+            BEGIN TRY     
+                DECLARE @NewLink VARCHAR(36) = NEWID();
+
+                MERGE ServerPlanningPoker.RestoredAccounts AS RS_BASE
+                USING (SELECT CURRENT_TIMESTAMP AS DateRequest, 
+                              NEWID() AS Link, 
+                              Id AS AccountId 
+                                    FROM ServerPlanningPoker.Persons 
+                                        WHERE Email = @Email) AS RS_SOURCE
+                ON (RS_SOURCE.AccountId = RS_BASE.AccountId)
+                WHEN MATCHED  THEN 
+                    UPDATE SET RS_BASE.Link = @NewLink,
+                               RS_BASE.IsActive = 1,
+                               RS_BASE.DateRequest = CURRENT_TIMESTAMP
+                WHEN NOT MATCHED THEN 
+                    INSERT (DateRequest, Link, IsActive, AccountId)
+                    VALUES (CURRENT_TIMESTAMP, @NewLink, 1, RS_SOURCE.AccountId); 
+                
+                SELECT Link 
+                        FROM ServerPlanningPoker.RestoredAccounts
+                            WHERE AccountId = (SELECT Id 
+                                                        FROM ServerPlanningPoker.Persons 
+                                                            WHERE Email = @Email);
+                COMMIT;
+            END TRY 
+
+            BEGIN CATCH
+                ROLLBACK;
+            END CATCH
+GO
+
+/*Proc add new room*/
+CREATE PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom](@NameRoom VARCHAR(200), 
                                         @Tasks XML,
                                         @Creator VARCHAR(50))
     AS  
         BEGIN TRANSACTION
             BEGIN TRY
                 DECLARE @LastIdRoom INT, @RoomGUID VARCHAR(36) = NEWID();
+				
+                IF (1 = ServerPlanningPoker.[IsNullOrEmpty](@Tasks))
+                BEGIN
+                    SELECT 'error';
+                    RETURN;                            
+                END
+
+                IF(@NameRoom = '' OR @NameRoom IS NULL)
+                BEGIN     
+                    SELECT 'error';
+                    RETURN;                   
+                END 
+				
                 INSERT INTO ServerPlanningPoker.Rooms (NameRoom, Created, IsActive, Creator, [GUID])
                 VALUES (@NameRoom, CURRENT_TIMESTAMP, 1, (SELECT Id FROM ServerPlanningPoker.Persons WHERE Email = @Creator),  @RoomGUID);
 
@@ -173,77 +259,16 @@ CREATE PROCEDURE [NewPlanningPokerRoom](@NameRoom VARCHAR(200),
                          FROM @Tasks.nodes('/tasks/task') T(C);                 
                 COMMIT;
                 SELECT TOP(1) Rooms.[GUID] FROM ServerPlanningPoker.Rooms AS Rooms ORDER BY Id DESC;
+                RETURN;
             END TRY
             BEGIN CATCH
-                SELECT ERROR_MESSAGE()
                 ROLLBACK;
+                RETURN;
             END CATCH
 GO 
---SELECT * FROM ServerPlanningPoker.Tasks
-/*Процедура создания и привязки коннекшенов к комнате*/
-CREATE PROCEDURE [CreateConnection](@UUID VARCHAR(36), 
-                                    @RoomGUID VARCHAR(36),
-                                    @Email VARCHAR(100))
-    AS
-        BEGIN TRANSACTION
-            BEGIN TRY
-                DECLARE @TasksId TABLE (Id INT);
-                DECLARE @PersonId INT = (SELECT Id FROM ServerPlanningPoker.Persons WHERE Email = @Email),
-                        @RoomId INT = (SELECT Id FROM ServerPlanningPoker.Rooms WHERE GUID = @RoomGUID),
-                        @xmlVM XML;
-                        
-                INSERT INTO @TasksId SELECT Id FROM ServerPlanningPoker.Tasks 
-                    --INNER JOIN ServerPlanningPoker. SELECT * FROM ServerPlanningPoker.Tasks
-                    WHERE RoomId = @RoomId --AND @PersonId = @PersonId;
-                
-                
-                INSERT INTO ServerPlanningPoker.Connections ([GUID], DateConnection, RoomId, PersonId)
-                VALUES (@UUID, 
-                        CURRENT_TIMESTAMP,
-                        (@RoomId),
-                        (@PersonId)
-                        );
 
-                DECLARE @lastVal INT = (SELECT TOP(1) Id FROM @TasksId ORDER BY 1 DESC),
-                        @currVal INT = (SELECT TOP(1) Id FROM @TasksId ORDER BY 1 ASC);
-                WHILE (@currVal <= @lastVal)
-                    BEGIN
-                        IF NOT EXISTS (SELECT Id FROM ServerPlanningPoker.Votes 
-                                                    WHERE PersonId = @PersonId AND RoomId = @RoomId AND TaskId = (SELECT @currVal))
-                    BEGIN
-                          INSERT INTO ServerPlanningPoker.Votes (Vote, Score, TaskId, RoomId, PersonId)
-                          VALUES(0, 0, @currVal, @RoomId, @PersonId);
-                    END
-                    SET @currVal = @currVal + 1;
-                END
-                
-                IF NOT EXISTS (SELECT Id FROM ServerPlanningPoker.ViewModels WHERE RoomId = @RoomId) --ПЕРЕСМОТРЕТЬ УСЛОВИЕ, ВОЗМОЖНО ОБНОВЛЯТЬ ВЬЮ МОДЕЛЬ
-                    BEGIN 
-                          EXECUTE [Build_First_ViewModel] @RoomId, @xmlVM OUTPUT;
-                          
-                          INSERT INTO ServerPlanningPoker.ViewModels (Source, Created, RoomId)
-                          VALUES (
-                                    @xmlVM,
-                                    CURRENT_TIMESTAMP,
-                                    @RoomId
-                                ); 
-                    END
-                ELSE 
-                    BEGIN
-                        EXECUTE [Build_First_ViewModel] @RoomId, @xmlVM OUTPUT;
-                        
-                        UPDATE ServerPlanningPoker.ViewModels
-                        SET Source = @xmlVM
-                        WHERE RoomId = @RoomId;
-                    END
-                COMMIT;
-            END TRY
-            BEGIN CATCH
-                ROLLBACK
-            END CATCH
-GO 
-/*Процедура получения View Model*/
-CREATE PROCEDURE [Build_First_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
+/*Proc get View Model*/
+CREATE PROCEDURE ServerPlanningPoker.[Get_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
     AS
         SET @xmlVMOut = ISNULL((SELECT (SELECT P.LoginName AS '@UserName',
                                         (ROW_NUMBER() OVER (ORDER BY P.Id ASC)) AS '@Id' 
@@ -273,8 +298,70 @@ CREATE PROCEDURE [Build_First_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
                      FOR XML RAW ('Room'), TYPE), (SELECT 'UnknownRoom' AS 'Error' FOR XML RAW ('Room'), TYPE));
 GO
 
-/*Процедура проверки пользователя*/
-CREATE PROCEDURE [CheckUser] (@email VARCHAR(100), 
+/*Proc create connection and linked their with room*/
+CREATE PROCEDURE ServerPlanningPoker.[CreateConnection](@UUID VARCHAR(36), 
+                                    @RoomGUID VARCHAR(36),
+                                    @Email VARCHAR(100))
+    AS
+        BEGIN TRANSACTION
+            BEGIN TRY
+                DECLARE @TasksId TABLE (Id INT);
+                DECLARE @PersonId INT = (SELECT Id FROM ServerPlanningPoker.Persons WHERE Email = @Email),
+                        @RoomId INT = (SELECT Id FROM ServerPlanningPoker.Rooms WHERE GUID = @RoomGUID),
+                        @xmlVM XML;
+                        
+                INSERT INTO @TasksId SELECT Id FROM ServerPlanningPoker.Tasks 
+                    WHERE RoomId = @RoomId
+                
+                
+                INSERT INTO ServerPlanningPoker.Connections ([GUID], DateConnection, RoomId, PersonId)
+                VALUES (@UUID, 
+                        CURRENT_TIMESTAMP,
+                        (@RoomId),
+                        (@PersonId)
+                        );
+
+                DECLARE @lastVal INT = (SELECT TOP(1) Id FROM @TasksId ORDER BY 1 DESC),
+                        @currVal INT = (SELECT TOP(1) Id FROM @TasksId ORDER BY 1 ASC);
+                WHILE (@currVal <= @lastVal)
+                    BEGIN
+                        IF NOT EXISTS (SELECT Id FROM ServerPlanningPoker.Votes 
+                                                    WHERE PersonId = @PersonId AND RoomId = @RoomId AND TaskId = (SELECT @currVal))
+                    BEGIN
+                          INSERT INTO ServerPlanningPoker.Votes (Vote, Score, TaskId, RoomId, PersonId)
+                          VALUES(0, 0, @currVal, @RoomId, @PersonId);
+                    END
+                    SET @currVal = @currVal + 1;
+                END
+                
+                IF NOT EXISTS (SELECT Id FROM ServerPlanningPoker.ViewModels WHERE RoomId = @RoomId)
+                    BEGIN 
+                          EXECUTE ServerPlanningPoker.[Get_ViewModel] @RoomId, @xmlVM OUTPUT;
+                          
+                          INSERT INTO ServerPlanningPoker.ViewModels (Source, Created, RoomId)
+                          VALUES (
+                                    @xmlVM,
+                                    CURRENT_TIMESTAMP,
+                                    @RoomId
+                                ); 
+                    END
+                ELSE 
+                    BEGIN
+                        EXECUTE ServerPlanningPoker.[Get_ViewModel] @RoomId, @xmlVM OUTPUT;
+                        
+                        UPDATE ServerPlanningPoker.ViewModels
+                        SET Source = @xmlVM
+                        WHERE RoomId = @RoomId;
+                    END
+                COMMIT;
+            END TRY
+            BEGIN CATCH
+                ROLLBACK
+            END CATCH
+GO 
+
+/*Proc check user*/
+CREATE PROCEDURE ServerPlanningPoker.[CheckUser] (@email VARCHAR(100), 
                               @password VARCHAR(100))
     AS  
         DECLARE @ResultCheck bit;
@@ -289,8 +376,8 @@ CREATE PROCEDURE [CheckUser] (@email VARCHAR(100),
         SELECT @ResultCheck;
 GO
 
-/*Проверка создателя комнаты*/
-CREATE PROCEDURE [CheckCreator] (@email VARCHAR(100),
+/*Proc check creator room*/
+CREATE PROCEDURE ServerPlanningPoker.[CheckCreator] (@email VARCHAR(100),
                                 @roomUID VARCHAR(36))
     AS
         IF (@email = (SELECT Email FROM ServerPlanningPoker.Persons 
@@ -305,9 +392,8 @@ CREATE PROCEDURE [CheckCreator] (@email VARCHAR(100),
             END
 GO
 
---EXEC Push_And_Get_Changes  '<Change><AddVote vote="1" /></Change>', 'add_vote', '58953a61-abb7-425e-9441-1ca92b97b6d1', 'romaphilomela@yandex.ru'
-/*Хранимая процедура сохраниения и получения xml ViewModel*/ --select * from ServerPlanningPoker.votes order by 1 desc
-CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML, 
+/*Proc save and get xml ViewModel*/
+CREATE PROCEDURE ServerPlanningPoker.[Push_And_Get_Changes] (@xmlChanges XML, 
                                         @nameChanges VARCHAR(50), 
                                         @roomGUID VARCHAR(36), 
                                         @email VARCHAR(50))
@@ -336,13 +422,13 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                         SET Score = @Score, Vote = @Vote
                         WHERE RoomId = @RoomId AND PersonId = @PersonId AND TaskId = @TaskId;
                         
-                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT;
+                        EXEC ServerPlanningPoker.[Get_ViewModel] @RoomId, @xmlOut OUTPUT;
                         SELECT @xmlOut;
                     END
                 
                 ELSE IF @nameChanges = 'ChangeGetVM'
                     BEGIN
-                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
+                        EXEC ServerPlanningPoker.[Get_ViewModel] @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
                     END
 
@@ -356,39 +442,41 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                                 FROM ServerPlanningPoker.Tasks WHERE RoomId = @RoomId
                         )
                         UPDATE ServerPlanningPoker.Tasks
-                        SET OnActive = 1 
+                        SET OnActive = 1,
+                            DateComplited = CURRENT_TIMESTAMP
                             WHERE RoomId = @RoomId AND Id = (SELECT Id 
                                                                 FROM tasksTable 
                                                                     WHERE RowId = (SELECT TOP(1) C.value('@taskId', 'INT')
                                                                                         FROM @xmlChanges.nodes('/Change/StartVoting') T(C)))
 
-                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
+                        EXEC ServerPlanningPoker.[Get_ViewModel] @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
                     END 
                 ELSE IF @nameChanges = 'StopVoting'
                     BEGIN
-                        
-                        UPDATE ServerPlanningPoker.Tasks
-                            SET OnActive = 0, Completed = 1
-                                WHERE RoomId = @RoomId AND OnActive = 1;
-                        
-                        INSERT INTO ServerPlanningPoker.TasksResults(Median, DateCreated, TaskId, RoomId)
-                        VALUES ((SELECT TOP(1) PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY Score)
-                                                            OVER (PARTITION BY RoomId) AS Median
-                                    FROM ServerPlanningPoker.Votes 
-                                        WHERE TaskId = (SELECT TOP(1) Id 
+                        IF EXISTS(SELECT 1 FROM ServerPlanningPoker.Tasks WHERE RoomId = @RoomId AND OnActive = 1 AND Completed = 0)
+                            BEGIN
+                                UPDATE ServerPlanningPoker.Tasks
+                                    SET OnActive = 0, Completed = 1 , DateComplited = CURRENT_TIMESTAMP
+                                        WHERE Id = (SELECT TOP(1)Id 
                                                             FROM ServerPlanningPoker.Tasks 
-                                                                WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC)
-                                            AND Score NOT IN (SELECT Score FROM ServerPlanningPoker.Scores_Dictionary))
-                                            --AND Vote = 1)
-                                ,CURRENT_TIMESTAMP
-                                ,(SELECT TOP(1) Id 
-                                    FROM ServerPlanningPoker.Tasks
-                                        WHERE RoomId = @RoomId AND Completed = 1 AND OnActive = 0 ORDER BY Id DESC)
-                                ,@RoomId
-                                ) 
-
-                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
+                                                                WHERE RoomId = @RoomId 
+                                                                AND OnActive = 1 ORDER BY DateComplited DESC);
+                                
+                                INSERT INTO ServerPlanningPoker.TasksResults(Median, DateCreated, TaskId, RoomId)
+                                VALUES ((SELECT TOP(1) PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY Score)
+                                                                    OVER (PARTITION BY RoomId) AS Median
+                                            FROM ServerPlanningPoker.Votes 
+                                                WHERE TaskId = (SELECT TOP(1) Id 
+                                                                    FROM ServerPlanningPoker.Tasks ORDER BY DateComplited DESC)
+                                                    AND Score NOT IN (SELECT Score FROM ServerPlanningPoker.Scores_Dictionary))
+                                        ,CURRENT_TIMESTAMP
+                                        ,(SELECT TOP(1) Id 
+                                            FROM ServerPlanningPoker.Tasks ORDER BY DateComplited DESC)
+                                        ,@RoomId
+                                        ) 
+                            END
+                        EXEC ServerPlanningPoker.[Get_ViewModel] @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
                     END
                 ELSE IF @nameChanges = 'FinishPlanning'
@@ -399,7 +487,7 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
                             IsActive = 0
                         WHERE Id = @RoomId
 
-                        EXEC Build_First_ViewModel @RoomId, @xmlOut OUTPUT; 
+                        EXEC ServerPlanningPoker.[Get_ViewModel] @RoomId, @xmlOut OUTPUT; 
                         SELECT @xmlOut;
                     END
                 COMMIT;
@@ -407,141 +495,111 @@ CREATE PROCEDURE [Push_And_Get_Changes] (@xmlChanges XML,
             END TRY
 
             BEGIN CATCH
-                
                 ROLLBACK;
             END CATCH
 GO
 
-SELECT * FROM ServerPlanningPoker.Votes ORDER BY RoomId DESC
-SELECT * FROM ServerPlanningPoker.TasksResults ORDER BY 1 DESC
-DELETE FROM ServerPlanningPoker.TasksResults
+/*Proc check user email*/
+CREATE PROCEDURE ServerPlanningPoker.[Check_User_Email] (@Email VARCHAR(50))
+    AS 
+        BEGIN TRANSACTION 
+        BEGIN TRY 
+            SELECT Email 
+                    FROM ServerPlanningPoker.Persons WITH(nolock) 
+                        WHERE Email = @email
+            COMMIT;
+        END TRY
 
-SELECT 
-INSERT INTO ServerPlanningPoker.Persons(LoginName, Email, [Password], Token) 
-VALUES('Roma2', 'romaphilomela@yandex2.ru', 'Rom@nkhik', NEWID())
-                
-EXECUTE CheckUser 'romaphilomela@yandex.ru', 'Rom@nkhik'
-SELECT * FROM ServerPlanningPoker.Persons
-
-EXECUTE Add_User 'philomelka', 'philomela@yandex.ru', 'Rom@nkhik'
-
-SELECT * FROM ServerPlanningPoker.Persons
-
-DECLARE @ret VARCHAR(300);
-EXEC [NewPlanningPokerRoom] 'RoomTdsdsdest', '
-<tasks>
-    <task name="Task1" time-discussion="5"></task>
-    <task name="Task2" time-discussion="5"></task>
-    <task name="Task3" time-discussion="6"></task>
-</tasks>', 'romaphilomela@yandex.ru'
-@ret OUTPUT
-SELECT @ret 
-
-
-DROP PROCEDURE [NewPlanningPokerRoom]
-
-DECLARE @temp XML = '
-<tasks>
-    <task name="TaskGoOne" time-discussion="5"></task>
-    <task name="TaskGoTwo" time-discussion="6"></task>
-    <task name="TaskGoThree" time-discussion="7"></task>
-</tasks>'
-SELECT C.value('@name', 'nvarchar(max)'), C.value('@time-discussion', 'tinyint') FROM @temp.nodes('/tasks/task') T (C)
-
-INSERT INTO ServerPlanningPoker.Rooms (NameRoom, Created, IsActive, Creator, [GUID]) VALUES ('room01', '2020-12-10', 1, 0, 'huid')
-INSERT INTO ServerPlanningPoker.Tasks ([Name], [TimeDiscussion], Created, OnActive, RoomId) VALUES ('Hello', 5, '2020-12-10', 0, 6)
-
-SELECT * FROM ServerPlanningPoker.Tasks ORDER BY 1 DESC
-SELECT * FROM ServerPlanningPoker.Rooms ORDER BY 1 DESC
-SELECT * FROM ServerPlanningPoker.ErrorsLog_Server 
-SELECT * FROM ServerPlanningPoker.Connections
-SELECT * FROM ServerPlanningPoker.ViewModels
-SELECT * FROM ServerPlanningPoker.Persons
+        BEGIN CATCH
+            ROLLBACK;
+        END CATCH
+GO
 
 
 
-SELECT 1 WHERE EXISTS ( SELECT [GUID] FROM FROM ServerPlanningPoker.Rooms WHERE GUID = '9c570ff5-bbec-40d8-b565-d4c373550dea')
+DROP TABLE ServerPlanningPoker.[Votes]
+DROP TABLE ServerPlanningPoker.[Tasks]
+DROP TABLE ServerPlanningPoker.[Rooms]
+DROP TABLE ServerPlanningPoker.[ErrorsLog_Server] 
+DROP TABLE ServerPlanningPoker.[Connections]
+DROP TABLE ServerPlanningPoker.[ViewModels]
+DROP TABLE ServerPlanningPoker.[Persons]
+DROP TABLE ServerPlanningPoker.[TasksResults]
+DROP TABLE ServerPlanningPoker.[Scores_Dictionary]
+DROP TABLE ServerPlanningPoker.[RestoredAccounts]
+DROP PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom]
+DROP PROCEDURE ServerPlanningPoker.[Add_User]
+DROP PROCEDURE ServerPlanningPoker.[CreateConnection]
+DROP PROCEDURE ServerPlanningPoker.[Get_ViewModel]
+DROP PROCEDURE ServerPlanningPoker.[Push_And_Get_Changes]
+DROP PROCEDURE ServerPlanningPoker.[Get_Password]
+DROP PROCEDURE ServerPlanningPoker.[CreateAccountRecoveryLink]
+DROP PROCEDURE ServerPlanningPoker.[RestoreAccount]
+DROP PROCEDURE ServerPlanningPoker.[Check_User_Email]
+DROP PROCEDURE ServerPlanningPoker.[CheckCreator]
+DROP PROCEDURE ServerPlanningPoker.[CheckUser]
+DROP PROCEDURE ServerPlanningPoker.[SaveError]
+DROP SCHEMA [ServerPlanningPoker]
 
-DROP TABLE ServerPlanningPoker.Votes
-DROP TABLE ServerPlanningPoker.Tasks
-DROP TABLE ServerPlanningPoker.Rooms
-DROP TABLE ServerPlanningPoker.ErrorsLog_Server 
-DROP TABLE ServerPlanningPoker.Connections
-DROP TABLE ServerPlanningPoker.ViewModels
-DROP TABLE ServerPlanningPoker.Persons
-DROP TABLE ServerPlanningPoker.Sessions
-DROP TABLE ServerPlanningPoker.TasksResults
-DROP TABLE ServerPlanningPoker.Scores_Dictionary
-DROP PROCEDURE u0932131_admin.NewPlanningPokerRoom
-DROP PROCEDURE u0932131_admin.Add_User
-DROP PROCEDURE u0932131_admin.CreateConnection
-DROP PROCEDURE Get_ViewModel
-DROP PROCEDURE Push_And_Get_Changes
-DROP PROCEDURE Build_First_ViewModel
-
-
-SELECT RegExp() FROM ServerPlanningPoker.Rooms 
-SELECT * FROM ServerPlanningPoker.Persons ORDER BY 1 DESC
-
-
-
-
-CREATE TABLE TestTable_01 (
-    id INT PRIMARY KEY IDENTITY,
-    surname VARCHAR(100) NULL,
-    [name] VARCHAR(100) NULL,
-    number_flight CHAR(10) NULL
-)
-
-INSERT INTO TestTable_01 ([name], surname, number_flight) VALUES ('Soloviev', 'Roman', 'A')
-
-INSERT INTO TestTable_01 VALUE ()
-
-SELECT * FROM TestTable_01
-
-DELETE FROM ServerPlanningPoker.Persons
-
+SELECT * FROM ServerPlanningPoker.RestoredAccounts
 SELECT * FROM ServerPlanningPoker.Persons
 
 
-DECLARE @UserName VARCHAR(30)
+
+DECLARE @Tasks XML = ''
 
 
-SELECT @Age = 1 
-SELECT @Age
+DECLARE @TempTable table (Id INT, [Name] VARCHAR(MAX), 
+										  [TimeDiscussion] TINYINT, 
+										  Created DATETIME2, 
+										  OnActive BIT, 
+										  Completed BIT);
+
+                        SELECT C.value('@name', 'nvarchar(max)'),
+                               C.value('@time-discussion', 'tinyint'),
+                         FROM @Tasks.nodes('/tasks/task') T(C); 
+
+GO
+
+CREATE FUNCTION ServerPlanningPoker.[IsNullOrEmpty](@XmlIn XML) 
+    RETURNS BIT
+    AS
+        BEGIN
+        DECLARE @OutVal BIT;
+        DECLARE @TempTable table ([Name] NVARCHAR(MAX), 
+							      [TimeDiscussion] TINYINT);
+            INSERT INTO @TempTable                        
+            SELECT C.value('@name', 'nvarchar(max)'),
+                   C.value('@time-discussion', 'tinyint')
+            FROM @XmlIn.nodes('/tasks/task') T(C); 
+
+            IF EXISTS(SELECT 1 FROM @TempTable WHERE [Name] = '' 
+            OR [Name] IS NULL 
+            OR [TimeDiscussion] = 0 
+            OR [TimeDiscussion] NOT BETWEEN 0 AND 10)
+                BEGIN
+                    SET @OutVal = 1;
+                END
+            ELSE 
+                BEGIN
+                    SET @OutVal = 0;
+                END
+            DELETE @TempTable;
+            RETURN @OutVal;
+        END
+GO
+
+CREATE PROCEDURE ServerPlanningPoker.[Get_Password] (@Email VARCHAR(100))
+    AS
+        SELECT [Password] 
+        FROM ServerPlanningPoker.Persons 
+            WHERE Email = @Email
+GO
 
 
-DECLARE @Age INT
-SELECT TOP(1) @Age = Id FROM ServerPlanningPoker.Tasks WHERE RoomId = 14
-SELECT @Age
+DROP FUNCTION ServerPlanningPoker.[IsNullOrEmpty]
 
-SELECT * FROM ServerPlanningPoker.Scores_Dictionary
+
 SELECT * FROM ServerPlanningPoker.Persons
 
-
-SELECT TOP(1) IIF((ROW_NUMBER(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY Score)
-                                                            OVER (PARTITION BY RoomId)) = 0, 5, 2) AS Median 
-                                    FROM ServerPlanningPoker.Votes 
-                                        WHERE TaskId = (SELECT TOP(1) Id 
-                                                            FROM ServerPlanningPoker.Tasks 
-                                                                WHERE Id =122 ORDER BY Id DESC)
-                                            AND Score NOT IN (SELECT Score FROM ServerPlanningPoker.Scores_Dictionary)
-                                            
-
-                                            select * from ServerPlanningPoker.Rooms ORDER BY 1 DESC
-
-
-                                            SELECT * FROM ServerPlanningPoker.Votes 
-                                        WHERE TaskId IN (SELECT Id 
-                                                            FROM ServerPlanningPoker.Tasks 
-                                                                WHERE RoomId = 44 )
-                                                    SELECT *
-                                                            FROM ServerPlanningPoker.Tasks 
-                                                                WHERE RoomId = 44
-
-
-                                                                SELECT * FROM ServerPlanningPoker.TasksResults ORDER BY 1 DESC
-
-
-
-SELECT * FROM ServerPlanningPoker.Tasks ORDER BY 1 DESC
+SELECT * FROM ServerPlanningPoker.Persons WHERE Email = 'a@ya.ru' AND [Password] = 'd0ecd71eb52758b4fd44243d8fdd0711'
