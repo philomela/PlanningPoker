@@ -1,0 +1,2 @@
+*.less linguist-vendored
+*.scss linguist-vendored
