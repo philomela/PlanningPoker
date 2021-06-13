@@ -1,2 +1,2 @@
-*.less linguist-vendored
-*.scss linguist-vendored
+*.less linguist-vendored=false
+*.scss linguist-vendored=false
