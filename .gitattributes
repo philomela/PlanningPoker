@@ -1,1 +1,1 @@
-templates/font-awesome-4.7.0/scss/*.scss export-ignore
+*.scss linguist-vendored
