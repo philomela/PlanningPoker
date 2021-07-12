@@ -144,29 +144,8 @@
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
         crossorigin="anonymous"></script>
 
-    <script type="text/javascript">
-        $('#createNewRoomButton').click(() => {
-            window.location.href = "/newroom";
-           
-        });
-        $('#signUp').click(() => {
-            window.location.href = "/registrationform";
-           
-        });
-        $('#signIn').click(() => {
-            window.location.href = "/loginform";
-           
-        });
+     <script src="templates/js/index.js"></script>
 
-        $(document).ready(function () {
-            $("a.scrollto").click(function () {
-                elementClick = $(this).attr("href")
-                destination = $(elementClick).offset().top;
-                $("html:not(:animated),body:not(:animated)").animate({ scrollTop: destination }, 1800);
-                return false;
-            });
-        });
-    </script>
 </body>
 
 </html>

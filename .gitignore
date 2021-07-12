@@ -20,3 +20,6 @@
 #Image files
 *.psd
 *.xml
+
+env.list
+serversSettings.json

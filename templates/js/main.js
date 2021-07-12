@@ -19,8 +19,7 @@ $.extend({
     }
 });
 
-function parseXmlResponse(currentXml) {
-    
+function parseXmlResponse(currentXml) { 
     $('.right-menu-room ul, .name-meeting h1, .tasks-left-menu-room, #tb-results').empty();
     var parserXml = new DOMParser();
     countTimerStarted++;
@@ -37,18 +36,14 @@ function parseXmlResponse(currentXml) {
         $('.name-meeting h1').text(nameMeeting);
     }
     var tasks = currentXml.getElementsByTagName('Tasks')[0].getElementsByTagName('Task')
-    if (tasks != null && tasks != undefined) {
-        
-             
-        for (let i = 0; i < tasks.length; i++) {
-                
+    if (tasks != null && tasks != undefined) {        
+        for (let i = 0; i < tasks.length; i++) {        
             if (tasks[i].getAttribute('IsCurrentActive') == 1) {
                 
                 $(document).ready(function() {
                     $(`#task-${tasks[i].getAttribute('Id')}`).css({"pointer-events": "none"})                               
                 });
                 
-
                 $(document).ready(function() {
                     buttonStartVoting.prop("disabled", true); 
                     buttonStartVoting.css({"background": "#b3b3b3"});
@@ -60,9 +55,7 @@ function parseXmlResponse(currentXml) {
                 }
                 
                 if (!timerStarted){
-                    StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));
-                    
-                    
+                    StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));        
                 }
                 
                 var currentPersonTasks = tasks[i].getElementsByTagName('PersonTask')
@@ -115,7 +108,6 @@ function parseXmlResponse(currentXml) {
                 for (let k = 0; k < persons.length; k++) {
                     if (persons[k].getAttribute('Id') == currentPersonId) {
                         $(`<td id="tsk-tb-person-${currentPersonId}">${persons[k].getAttribute('UserName')}</td>`).appendTo($('#tb-results').children().last());
-
                     }
                 }
             }
@@ -133,9 +125,7 @@ function parseXmlResponse(currentXml) {
                             else if (currentScore == coffeeIcon)
                                 currentScore = '<i class="fa fa-coffee" aria-hidden="true"></i>'
                             $(`<td id="tsk-tb-person-${currentPersonId}-score">${currentScore}</td>`).appendTo($('#tb-results').children().last());
-
                         }
-
                     }
                 }
                 var currentMedian = tasks[i].getAttribute('Median');
@@ -151,12 +141,10 @@ function parseXmlResponse(currentXml) {
                 }
                 else {
                     currentMedian = tasks[i].getAttribute('Median');
-                } 
-                
+                }               
                 $(`<td id="tsk-tb-median-tsk-${tasks[i].getAttribute('Id')}-score">${currentMedian}</td>`).appendTo($('#tb-results').children().last());
             }
         }
-
     }
 }
 
@@ -180,7 +168,7 @@ function StartTimerTask(initTime) {
     }, 1000)
     setTimeout(() => { 
         clearInterval(timerTask); 
-        timerStarted = false; //Пересмотреть логику когда никто не проголосовал за задачу, после истечения таймера пропадает complete
+        timerStarted = false; 
         $('.is-current-active-1').next().text("Completed");
     }, stopTime)
     
@@ -191,14 +179,9 @@ $(document).on('click', '.button-room', (e) => {
     socketInst.send(`ChangeVote==<Change><AddVote vote="1" score="${e.target.id.split('-')[1]}"/></Change>`);
     var currBtn = $(`#${e.target.id}`);
     $('.button-room').css({"-webkit-transform": "none", "transition-duration": "none"});
-    currBtn.css({"-webkit-transform": "translateY(-10px)", "transition-duration": "1000ms"});
-    
-
-    //currBtn.css({"-webkit-transform": ""})
-    
+    currBtn.css({"-webkit-transform": "translateY(-10px)", "transition-duration": "1000ms"});   
 });
 
 createWebSocket();
 
-
-parseXmlResponse(currentXml); //test
+parseXmlResponse(currentXml);
