@@ -1,6 +1,6 @@
 {
     "SQLServer": {
-        "DSN": "server=37.140.192.98;user id=u0932131_admin;password=RomanAndrey46;database=u0932131_planningPoker",
+        "DSN": "server=x;user id=x;password=x;database=x",
         "TypeSql": "mssql"
     },
     "ServerHost": {
@@ -22,9 +22,9 @@
     "SmtpServer": {
         "Host": "smtp.server.net",
         "LoginHost": "planning-poker",
-        "PassHost": "pass",
+        "PassHost": "x",
         "PortHost": ":587",
-        "ApiKey": "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"
+        "ApiKey": "x"
     }
     
 }
