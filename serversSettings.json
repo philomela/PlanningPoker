@@ -22,7 +22,7 @@
     "SmtpServer": {
         "Host": "smtp.server.net",
         "LoginHost": "planning-poker",
-        "PassHost": "x",
+        "PassHost": "pass",
         "PortHost": ":587",
         "ApiKey": "x"
     }
