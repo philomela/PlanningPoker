@@ -603,3 +603,4 @@ DROP FUNCTION ServerPlanningPoker.[IsNullOrEmpty]
 SELECT * FROM ServerPlanningPoker.Persons
 
 SELECT * FROM ServerPlanningPoker.Persons WHERE Email = 'a@ya.ru' AND [Password] = 'd0ecd71eb52758b4fd44243d8fdd0711'
+
