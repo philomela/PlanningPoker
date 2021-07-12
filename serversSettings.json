@@ -1,6 +1,6 @@
 {
     "SQLServer": {
-        "DSN": "server=37.140.192.98;user id=u0932131_admin;password=RomanAndrey46;database=u0932131_planningPoker",
+        "DSN": "server=x;user id=x;password=x;database=x",
         "TypeSql": "mssql"
     },
     "ServerHost": {
