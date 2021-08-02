@@ -20,9 +20,9 @@
         "RestoreAccount": "change-password-form?linkRestore="
     },
     "SmtpServer": {
-        "Host": "smtp.server.net",
-        "LoginHost": "planning-poker",
-        "PassHost": "pass",
+        "Host": "x",
+        "LoginHost": "x",
+        "PassHost": "x",
         "PortHost": ":587",
         "ApiKey": "x"
     }

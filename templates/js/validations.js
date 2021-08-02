@@ -27,7 +27,7 @@ const validationNameRoom = {
         return false
     },
     validateTasksNames: function (tasks) {
-        for(let task of tasks){
+        for (let task of tasks) {
             if (task.getAttribute('name').length > 1)
                 continue;
             else return false;
@@ -35,8 +35,7 @@ const validationNameRoom = {
         return true;
     },
     validateTimeDiscussions: function (tasks) {
-        for(let task of tasks){
-            
+        for (let task of tasks) {
             if (task.getAttribute('time-discussion') >= 1 && task.getAttribute('time-discussion') <= 10)
                 continue;
             else return false;
