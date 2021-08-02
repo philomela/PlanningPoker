@@ -20,7 +20,6 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-lg-12">
-
                     <nav class="navbar navbar-expand-lg navbar-light bg-light">
                         <a class="navbar-brand" href="/">
                             <img src="../templates/img/icon.png" width="30" height="30" alt="">
@@ -30,7 +29,6 @@
                             aria-expanded="false" aria-label="Toggle navigation">
                             <span class="navbar-toggler-icon"></span>
                         </button>
-
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul class="navbar-nav mr-auto">
                                 <li class="nav-item active">
@@ -42,7 +40,6 @@
                             </form>
                         </div>
                     </nav>
-
                 </div>
             </div>
         </div>
@@ -57,11 +54,9 @@
                         aria-hidden="true"></i></h3>
                 <div class="tasks-left-menu-room"></div>
                 <div class="creator-tools">{{ .CreatorTools}}</div>
-
             </div>
             <div class="col-lg-6 text-center main-room">
                 <div class="preloader-room">
-
                 </div>
                 <button id="btn-1" class="button-room"><img id="btn-1" src="/templates/img/voice-1.png" alt=""
                         width="100"></button>
@@ -83,14 +78,11 @@
                         width="100"></button>
                 <button id="btn-777" class="button-room"><img id="btn-777" src="/templates/img/voice-question.png"
                         alt="" width="100"></button>
-
             </div>
-
             <div class="col-lg-2 text-left right-menu-room">
                 <h3 class="name-right-menu text-center"><span>Party</span><i class="fa fa-thumb-tack"
                         aria-hidden="true"></i></h3>
                 <ul>
-
                 </ul>
             </div>
         </div>
@@ -116,7 +108,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
         crossorigin="anonymous"></script>
-
+    <!--Вынести в отдельный скрипт-->
     <script>
         function createWebSocket() {
             socketInst = new WebSocket({{ .WebSocketExternalAddress }} + $.getUrlVar('roomId'));
@@ -127,21 +119,17 @@
         socketInst.onmessage = function (event) {
 
             currentXmlString = event.data;
-
             var parserXml = new DOMParser();
             currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
-
             if (currentXml.getElementsByTagName('Room')[0].getAttribute('Error') == "UnknownRoom") {
                 document.location.href = "unknownroom";
             }
-
             parseXmlResponse(currentXml);
         }
 }
     </script>
 
     <script src="templates/js/main.js"></script>
-
     {{ .CreatorScripts}}
 
 </body>

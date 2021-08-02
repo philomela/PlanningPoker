@@ -19,12 +19,12 @@ $.extend({
     }
 });
 
-function parseXmlResponse(currentXml) { 
+function parseXmlResponse(currentXml) {
     $('.right-menu-room ul, .name-meeting h1, .tasks-left-menu-room, #tb-results').empty();
     var parserXml = new DOMParser();
     countTimerStarted++;
     currentXml = parserXml.parseFromString(currentXmlString, "text/xml");
-    
+
     var persons = currentXml.getElementsByTagName('Persons')[0].getElementsByTagName('Person')
     if (persons != null && persons != undefined)
         for (var i = 0; i < persons.length; i++) {
@@ -32,32 +32,32 @@ function parseXmlResponse(currentXml) {
         }
     var nameMeeting = currentXml.getElementsByTagName('Room')[0].getAttribute('NameRoom');
     if (nameMeeting != null & persons != undefined) {
-        
+
         $('.name-meeting h1').text(nameMeeting);
     }
     var tasks = currentXml.getElementsByTagName('Tasks')[0].getElementsByTagName('Task')
-    if (tasks != null && tasks != undefined) {        
-        for (let i = 0; i < tasks.length; i++) {        
+    if (tasks != null && tasks != undefined) {
+        for (let i = 0; i < tasks.length; i++) {
             if (tasks[i].getAttribute('IsCurrentActive') == 1) {
-                
-                $(document).ready(function() {
-                    $(`#task-${tasks[i].getAttribute('Id')}`).css({"pointer-events": "none"})                               
+
+                $(document).ready(function () {
+                    $(`#task-${tasks[i].getAttribute('Id')}`).css({ "pointer-events": "none" })
                 });
-                
-                $(document).ready(function() {
-                    buttonStartVoting.prop("disabled", true); 
-                    buttonStartVoting.css({"background": "#b3b3b3"});
-                                       
+
+                $(document).ready(function () {
+                    buttonStartVoting.prop("disabled", true);
+                    buttonStartVoting.css({ "background": "#b3b3b3" });
+
                 });
-                
-                if (countTimerStarted <= 1){
+
+                if (countTimerStarted <= 1) {
                     StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));
                 }
-                
-                if (!timerStarted){
-                    StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));        
+
+                if (!timerStarted) {
+                    StartTimerTask(tasks[i].getAttribute('TimeDiscussion'));
                 }
-                
+
                 var currentPersonTasks = tasks[i].getElementsByTagName('PersonTask')
                 for (k = 0; k < currentPersonTasks.length; k++) {
                     if (currentPersonTasks[k].getAttribute('Vote') != 0) {
@@ -67,37 +67,37 @@ function parseXmlResponse(currentXml) {
             }
             $(`<div id="task-${tasks[i].getAttribute('Id')}" class="task-room is-current-active-${tasks[i].getAttribute('IsCurrentActive')}">${tasks[i].getAttribute('NameTask')}</div><div class="time-task-discussion">
                         ${tasks[i].getAttribute('TimeDiscussion')} :min</div>`).appendTo($('.tasks-left-menu-room'));
-                        if (tasks[i].getAttribute('Completed') == 1){
-                            $(`#task-${tasks[i].getAttribute('Id')}`).css({ "text-decoration": "line-through", "pointer-events": "none"});
+            if (tasks[i].getAttribute('Completed') == 1) {
+                $(`#task-${tasks[i].getAttribute('Id')}`).css({ "text-decoration": "line-through", "pointer-events": "none" });
 
-                        }
-                        var hasCurrentActive = false;
-                        for (let i = 0; i < tasks.length; i++){
-                            if (tasks[i].getAttribute('IsCurrentActive') == 1){
-                                hasCurrentActive = true;
-                            }
-                        }
+            }
+            var hasCurrentActive = false;
+            for (let i = 0; i < tasks.length; i++) {
+                if (tasks[i].getAttribute('IsCurrentActive') == 1) {
+                    hasCurrentActive = true;
+                }
+            }
 
-                        if (tasks[i].getAttribute('Completed') == 0 && tasks[i].getAttribute('IsCurrentActive') == 0 && hasCurrentActive){
-                            $(`#task-${tasks[i].getAttribute('Id')}`).css({ "color": "#CCCCCC", "pointer-events": "none"});
-                            $(`#task-${tasks[i].getAttribute('Id')}`).next().css({"color": "#CCCCCC", "pointer-events": "none"})
-                        }
+            if (tasks[i].getAttribute('Completed') == 0 && tasks[i].getAttribute('IsCurrentActive') == 0 && hasCurrentActive) {
+                $(`#task-${tasks[i].getAttribute('Id')}`).css({ "color": "#CCCCCC", "pointer-events": "none" });
+                $(`#task-${tasks[i].getAttribute('Id')}`).next().css({ "color": "#CCCCCC", "pointer-events": "none" })
+            }
 
-                        if (i == tasks.length - 1 && !hasCurrentActive) {
-                            clearInterval(timerTask);
-                            timerStarted = false;
-                            $('.is-current-active-1').next().text("Completed");
-                            $('.button-room').css({"-webkit-transform": "none", "transition-duration": "none"});
-                            $('.button-room').css({"pointer-events": "none"});
-                            $('.button-room').css({"opacity": "0.25"});
-                            $('.preloader-room').css({"display": "block"});
-                            
-                        }
-                        else{
-                            $('.preloader-room').css({"display": "none"});
-                            $('.button-room').css({"opacity": "100"});
-                            $('.button-room').css({"pointer-events": "auto"});
-                        }
+            if (i == tasks.length - 1 && !hasCurrentActive) {
+                clearInterval(timerTask);
+                timerStarted = false;
+                $('.is-current-active-1').next().text("Completed");
+                $('.button-room').css({ "-webkit-transform": "none", "transition-duration": "none" });
+                $('.button-room').css({ "pointer-events": "none" });
+                $('.button-room').css({ "opacity": "0.25" });
+                $('.preloader-room').css({ "display": "block" });
+
+            }
+            else {
+                $('.preloader-room').css({ "display": "none" });
+                $('.button-room').css({ "opacity": "100" });
+                $('.button-room').css({ "pointer-events": "auto" });
+            }
 
             $(`<tr id="tsk-tb-${tasks[i].getAttribute('Id')}" class="tsk-tb"><td id="tb-name-task">${tasks[i].getAttribute('NameTask')}</tr>`).appendTo($('#tb-results'));
 
@@ -119,7 +119,7 @@ function parseXmlResponse(currentXml) {
                     for (let l = 0; l < persons.length; l++) {
                         if (persons[l].getAttribute('Id') == currentPersonId) {
                             var currentScore = currPersonTasks[j].getAttribute('Score');
-                            if(currentScore == questionIcon){
+                            if (currentScore == questionIcon) {
                                 currentScore = '<i class="fa fa-question" aria-hidden="true"></i>'
                             }
                             else if (currentScore == coffeeIcon)
@@ -129,11 +129,11 @@ function parseXmlResponse(currentXml) {
                     }
                 }
                 var currentMedian = tasks[i].getAttribute('Median');
-                
-                if (!currentMedian){
+
+                if (!currentMedian) {
                     currentMedian = "Unknown";
                 }
-                else if (currentMedian == questionIconMedian){
+                else if (currentMedian == questionIconMedian) {
                     currentMedian = '<i class="fa fa-question" aria-hidden="true"></i>';
                 }
                 else if (currentMedian == coffeeIconMedian) {
@@ -141,7 +141,7 @@ function parseXmlResponse(currentXml) {
                 }
                 else {
                     currentMedian = tasks[i].getAttribute('Median');
-                }               
+                }
                 $(`<td id="tsk-tb-median-tsk-${tasks[i].getAttribute('Id')}-score">${currentMedian}</td>`).appendTo($('#tb-results').children().last());
             }
         }
@@ -158,28 +158,28 @@ function StartTimerTask(initTime) {
         return
 
     var timeTask = initTime * 60, stopTime = timeTask * 1000;
-    
-        timerTask = setInterval(() => {
+
+    timerTask = setInterval(() => {
         timeTask -= 1;
-        timeTaskOut = `${Math.trunc(timeTask / 60) }-m: ${Math.trunc(timeTask % 60)}-sec`
+        timeTaskOut = `${Math.trunc(timeTask / 60)}-m: ${Math.trunc(timeTask % 60)}-sec`
         $('.is-current-active-1').next().text(timeTaskOut);
-        $('.is-current-active-1').next().css({"background": "#6a155d", "color": "white", "padding": "3px"})
-        
+        $('.is-current-active-1').next().css({ "background": "#6a155d", "color": "white", "padding": "3px" })
+
     }, 1000)
-    setTimeout(() => { 
-        clearInterval(timerTask); 
-        timerStarted = false; 
+    setTimeout(() => {
+        clearInterval(timerTask);
+        timerStarted = false;
         $('.is-current-active-1').next().text("Completed");
     }, stopTime)
-    
+
 }
 
 $(document).on('click', '.button-room', (e) => {
     e.preventDefault();
     socketInst.send(`ChangeVote==<Change><AddVote vote="1" score="${e.target.id.split('-')[1]}"/></Change>`);
     var currBtn = $(`#${e.target.id}`);
-    $('.button-room').css({"-webkit-transform": "none", "transition-duration": "none"});
-    currBtn.css({"-webkit-transform": "translateY(-10px)", "transition-duration": "1000ms"});   
+    $('.button-room').css({ "-webkit-transform": "none", "transition-duration": "none" });
+    currBtn.css({ "-webkit-transform": "translateY(-10px)", "transition-duration": "1000ms" });
 });
 
 createWebSocket();

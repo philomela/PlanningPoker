@@ -1,14 +1,14 @@
 $('#createNewRoomButton').click(() => {
     window.location.href = "/newroom";
-   
+
 });
 $('#signUp').click(() => {
     window.location.href = "/registrationform";
-   
+
 });
 $('#signIn').click(() => {
     window.location.href = "/loginform";
-   
+
 });
 
 $(document).ready(function () {
