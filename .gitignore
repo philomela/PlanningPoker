@@ -16,7 +16,7 @@
 
 #Db-files
 *.DS_Store
-*swp
+*.swp
 
 #Image files
 *.psd
