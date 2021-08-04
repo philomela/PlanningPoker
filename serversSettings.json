@@ -1,0 +1,31 @@
+{
+    "SQLServer": {
+        "DSN": "server=x;user id=x;password=x;database=x",
+        "TypeSql": "mssql"
+    },
+    "ServerHost": {
+        "Protocol": "http://",
+        "Host": "localhost",
+        "Port": ":8080",
+        "InternalHostName": "http://localhost:8080/",
+        "ExternalHostName": "http://localhost:8080/",
+        "Room": "rooms?roomId=",
+        "ExternalPathToLoginForm": "http://localhost:8080/loginform",
+        "ExternalPathToNewRoom": "http://localhost:8080/newroom",
+        "ExternalPathToRegistrationForm": "http://localhost:8080/registrationform",
+        "ExternalPathToRestoreAcc": "http://localhost:8080/restore-account",
+        "ExternalPathToChangePass": "http://localhost:8080/update-password",
+        "WebSocketProtocol": "ws://",
+        "WebSocketExternalAddress": "ws://localhost:8080/echo?roomId=",
+        "RestoreAccount": "change-password-form?linkRestore="
+    },
+    "SmtpServer": {
+        "Host": "x",
+        "LoginHost": "x",
+        "PassHost": "x",
+        "PortHost": ":587",
+        "ApiKey": "x"
+    }
+    
+}
+

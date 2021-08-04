@@ -22,6 +22,5 @@
 *.psd
 *.xml
 
-env.list
-serversSettings.json
+
 ServerPlanningPoker.code-workspace
