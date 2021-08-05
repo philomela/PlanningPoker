@@ -1,6 +1,6 @@
 {
     "SQLServer": {
-        "DSN": "server=x;user id=x;password=x;database=x",
+        "DSN": "server=x",
         "TypeSql": "mssql"
     },
     "ServerHost": {
@@ -26,6 +26,4 @@
         "PortHost": ":587",
         "ApiKey": "x"
     }
-    
 }
-
