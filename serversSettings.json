@@ -1,6 +1,6 @@
 {
     "SQLServer": {
-        "DSN": "server=x;user id=x;password=x;database=x",
+        "DSN": "server=*;user id=*;password=*;database=*",
         "TypeSql": "mssql"
     },
     "ServerHost": {
@@ -20,12 +20,9 @@
         "RestoreAccount": "change-password-form?linkRestore="
     },
     "SmtpServer": {
-        "Host": "x",
-        "LoginHost": "x",
-        "PassHost": "x",
-        "PortHost": ":587",
-        "ApiKey": "x"
+        "Host": "smtp.gmail.com",
+        "LoginHost": "*@*",
+        "PassHost": "*",
+        "PortHost": ":587"
     }
-    
 }
-

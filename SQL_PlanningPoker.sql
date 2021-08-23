@@ -45,7 +45,7 @@ CREATE TABLE ServerPlanningPoker.Persons(
     Id INT PRIMARY KEY IDENTITY,
     LoginName VARCHAR(50) UNIQUE NOT NULL,
     Email VARCHAR(100) UNIQUE NOT NULL,
-    [Password] VARCHAR(300),
+    [Password] VARCHAR(100),
     [Token] VARCHAR(36)   
 )
 GO
@@ -131,7 +131,7 @@ GO
 /*Proc add new user*/
 CREATE PROCEDURE ServerPlanningPoker.[Add_User](@LoginName VARCHAR(50), 
                             @Email VARCHAR(100), 
-                            @Password VARCHAR(30))
+                            @Password VARCHAR(100))
     AS 
         BEGIN TRANSACTION        
                 BEGIN TRY
@@ -396,7 +396,7 @@ GO
 CREATE PROCEDURE ServerPlanningPoker.[Push_And_Get_Changes] (@xmlChanges XML, 
                                         @nameChanges VARCHAR(50), 
                                         @roomGUID VARCHAR(36), 
-                                        @email VARCHAR(50))
+                                        @email VARCHAR(100))
     AS
         BEGIN TRANSACTION 
         BEGIN TRY
@@ -500,7 +500,7 @@ CREATE PROCEDURE ServerPlanningPoker.[Push_And_Get_Changes] (@xmlChanges XML,
 GO
 
 /*Proc check user email*/
-CREATE PROCEDURE ServerPlanningPoker.[Check_User_Email] (@Email VARCHAR(50))
+CREATE PROCEDURE ServerPlanningPoker.[Check_User_Email] (@Email VARCHAR(100))
     AS 
         BEGIN TRANSACTION 
         BEGIN TRY 
@@ -515,52 +515,7 @@ CREATE PROCEDURE ServerPlanningPoker.[Check_User_Email] (@Email VARCHAR(50))
         END CATCH
 GO
 
-
-
-DROP TABLE ServerPlanningPoker.[Votes]
-DROP TABLE ServerPlanningPoker.[Tasks]
-DROP TABLE ServerPlanningPoker.[Rooms]
-DROP TABLE ServerPlanningPoker.[ErrorsLog_Server] 
-DROP TABLE ServerPlanningPoker.[Connections]
-DROP TABLE ServerPlanningPoker.[ViewModels]
-DROP TABLE ServerPlanningPoker.[Persons]
-DROP TABLE ServerPlanningPoker.[TasksResults]
-DROP TABLE ServerPlanningPoker.[Scores_Dictionary]
-DROP TABLE ServerPlanningPoker.[RestoredAccounts]
-DROP PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom]
-DROP PROCEDURE ServerPlanningPoker.[Add_User]
-DROP PROCEDURE ServerPlanningPoker.[CreateConnection]
-DROP PROCEDURE ServerPlanningPoker.[Get_ViewModel]
-DROP PROCEDURE ServerPlanningPoker.[Push_And_Get_Changes]
-DROP PROCEDURE ServerPlanningPoker.[Get_Password]
-DROP PROCEDURE ServerPlanningPoker.[CreateAccountRecoveryLink]
-DROP PROCEDURE ServerPlanningPoker.[RestoreAccount]
-DROP PROCEDURE ServerPlanningPoker.[Check_User_Email]
-DROP PROCEDURE ServerPlanningPoker.[CheckCreator]
-DROP PROCEDURE ServerPlanningPoker.[CheckUser]
-DROP PROCEDURE ServerPlanningPoker.[SaveError]
-DROP SCHEMA [ServerPlanningPoker]
-
-SELECT * FROM ServerPlanningPoker.RestoredAccounts
-SELECT * FROM ServerPlanningPoker.Persons
-
-
-
-DECLARE @Tasks XML = ''
-
-
-DECLARE @TempTable table (Id INT, [Name] VARCHAR(MAX), 
-										  [TimeDiscussion] TINYINT, 
-										  Created DATETIME2, 
-										  OnActive BIT, 
-										  Completed BIT);
-
-                        SELECT C.value('@name', 'nvarchar(max)'),
-                               C.value('@time-discussion', 'tinyint'),
-                         FROM @Tasks.nodes('/tasks/task') T(C); 
-
-GO
-
+/*Check on null or empty*/
 CREATE FUNCTION ServerPlanningPoker.[IsNullOrEmpty](@XmlIn XML) 
     RETURNS BIT
     AS
@@ -589,18 +544,27 @@ CREATE FUNCTION ServerPlanningPoker.[IsNullOrEmpty](@XmlIn XML)
         END
 GO
 
-CREATE PROCEDURE ServerPlanningPoker.[Get_Password] (@Email VARCHAR(100))
-    AS
-        SELECT [Password] 
-        FROM ServerPlanningPoker.Persons 
-            WHERE Email = @Email
-GO
-
-
+/*Drop all objects db*/
+DROP TABLE ServerPlanningPoker.[Votes]
+DROP TABLE ServerPlanningPoker.[Tasks]
+DROP TABLE ServerPlanningPoker.[Rooms]
+DROP TABLE ServerPlanningPoker.[ErrorsLog_Server] 
+DROP TABLE ServerPlanningPoker.[Connections]
+DROP TABLE ServerPlanningPoker.[ViewModels]
+DROP TABLE ServerPlanningPoker.[Persons]
+DROP TABLE ServerPlanningPoker.[TasksResults]
+DROP TABLE ServerPlanningPoker.[Scores_Dictionary]
+DROP TABLE ServerPlanningPoker.[RestoredAccounts]
+DROP PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom]
+DROP PROCEDURE ServerPlanningPoker.[Add_User]
+DROP PROCEDURE ServerPlanningPoker.[CreateConnection]
+DROP PROCEDURE ServerPlanningPoker.[Get_ViewModel]
+DROP PROCEDURE ServerPlanningPoker.[Push_And_Get_Changes]
+DROP PROCEDURE ServerPlanningPoker.[CreateAccountRecoveryLink]
+DROP PROCEDURE ServerPlanningPoker.[RestoreAccount]
+DROP PROCEDURE ServerPlanningPoker.[Check_User_Email]
+DROP PROCEDURE ServerPlanningPoker.[CheckCreator]
+DROP PROCEDURE ServerPlanningPoker.[CheckUser]
+DROP PROCEDURE ServerPlanningPoker.[SaveError]
 DROP FUNCTION ServerPlanningPoker.[IsNullOrEmpty]
-
-
-SELECT * FROM ServerPlanningPoker.Persons
-
-SELECT * FROM ServerPlanningPoker.Persons WHERE Email = 'a@ya.ru' AND [Password] = 'd0ecd71eb52758b4fd44243d8fdd0711'
-
+DROP SCHEMA [ServerPlanningPoker]

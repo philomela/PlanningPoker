@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+const settingsFileDir string = "./serversSettings.json"
+
 type ServerSettings struct {
 	SQLServer  ServerSql
 	ServerHost ServerHost
@@ -35,18 +37,17 @@ type ServerSmtp struct {
 	LoginHost string
 	PassHost  string
 	PortHost  string
-	ApiKey    string
 }
 
 func InitServerSetting() *ServerSettings {
 	currentServerSettings := &ServerSettings{}
-	currentServerSettings.InitSettingFromLocalFile()
+	currentServerSettings.InitSettingFromLocalFile(settingsFileDir)
 	currentServerSettings.InitSettingFromEnvVariables(os.Getenv("APP_ENV_NAME_PLANNING_POKER"))
 	return currentServerSettings
 }
 
-func (s *ServerSettings) InitSettingFromLocalFile() {
-	jsonFile, err := os.Open("./serversSettings.json")
+func (s *ServerSettings) InitSettingFromLocalFile(dir string) {
+	jsonFile, err := os.Open(dir)
 
 	defer jsonFile.Close()
 
@@ -74,6 +75,5 @@ func (s *ServerSettings) InitSettingFromEnvVariables(envParam string) {
 		s.ServerHost.ExternalPathToChangePass = os.Getenv("PLANNING_POKER_EXT_PATH_CHANGEPASS")
 		s.ServerHost.WebSocketProtocol = os.Getenv("PLANNING_POKER_WEBSOCKET_PROTOCOL")
 		s.ServerHost.WebSocketExternalAddress = os.Getenv("PLANNING_POKER_WEBSOCKET_EXTERNALADDRESS")
-		s.SmtpServer.ApiKey = os.Getenv("PLANNING_POKER_SMTP_APIKEY")
 	}
 }
