@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/smtp"
 	"regexp"
 	"strings"
 	"time"
@@ -23,8 +24,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/sendgrid/sendgrid-go"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
 var currentServerSettings *PlanningPokerSettings.ServerSettings
@@ -344,20 +343,27 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) {
 	if resultCheck == "Succsess" {
 		w.Write([]byte(resultCheck))
 
-		go func(ss *PlanningPokerSettings.ServerSettings) {
+		go func() {
 			defer close(structCh)
-			from := mail.NewEmail("Planning poker team", "romaphilomela@yandex.ru")
-			subject := "Successful registration"
-			to := mail.NewEmail("Dear User", email)
-			plainTextContent := "You have successfully registered with Planning-poker"
-			htmlContent := fmt.Sprintf("<strong>You have successfully registered with Planning-poker with login: %s</strong>", userName)
-			message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-			client := sendgrid.NewSendClient(ss.SmtpServer.ApiKey)
-			if _, err := client.Send(message); err != nil {
+			from := currentServerSettings.SmtpServer.LoginHost
+			pass := currentServerSettings.SmtpServer.PassHost
+			to := email
+
+			content := fmt.Sprintf("Dear User!, %s. You have successfully registered with Planning-poker with login: %s", email, userName)
+			msg := "From: " + from + "\n" +
+				"To: " + to + "\n" +
+				"Subject: Successful registration\n\n" +
+				content
+
+			if err := smtp.SendMail(currentServerSettings.SmtpServer.Host+currentServerSettings.SmtpServer.PortHost,
+				smtp.PlainAuth("", from, pass, currentServerSettings.SmtpServer.Host),
+				from, []string{to}, []byte(msg)); err != nil {
 				fmt.Println("Error SendMail: ", err)
 			}
-		}(currentServerSettings)
+		}()
+
 		<-structCh
+
 		return
 	} else {
 		w.Write([]byte(resultCheck))
@@ -478,19 +484,27 @@ func createRestoreAccountLink(w http.ResponseWriter, r *http.Request) {
 
 		if emailCurrCtx == email {
 
-			from := mail.NewEmail("planning-poker team", "romaphilomela@yandex.ru")
-			subject := "An attempt was made to restore your account"
-			to := mail.NewEmail("Dear User", emailCurrCtx)
-			plainTextContent := "An attempt was made to restore your account"
-			htmlContent := fmt.Sprintf("<strong>An attempt was made to restore your account. To change your password, follow the link: %s</strong>",
+			from := currentServerSettings.SmtpServer.LoginHost
+			pass := currentServerSettings.SmtpServer.PassHost
+			to := emailCurrCtx
+
+			content := fmt.Sprintf("Dear User!, %s. An attempt was made to restore your account. To change your password, follow the link: %s", email,
 				currentServerSettings.ServerHost.ExternalHostName+currentServerSettings.ServerHost.RestoreAccount+strings.ToLower(recoveryLnk))
-			message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-			client := sendgrid.NewSendClient(currentServerSettings.SmtpServer.ApiKey)
-			if _, err := client.Send(message); err != nil {
+			msg := "From: " + from + "\n" +
+				"To: " + to + "\n" +
+				"Subject: An attempt was made to restore your account\n\n" +
+				content
+
+			if err := smtp.SendMail(currentServerSettings.SmtpServer.Host+currentServerSettings.SmtpServer.PortHost,
+				smtp.PlainAuth("", from, pass, currentServerSettings.SmtpServer.Host),
+				from, []string{to}, []byte(msg)); err != nil {
 				fmt.Println("Error SendMail: ", err)
 			}
+
 			data := ViewData{Message: "An account recovery request has been generated, pls check in your email."}
+
 			tmplMessageCh <- data
+
 		} else {
 			data := ViewData{Message: "Such account was not found."}
 			tmplMessageCh <- data

@@ -16,10 +16,11 @@
 
 #Db-files
 *.DS_Store
+*.swp
 
 #Image files
 *.psd
 *.xml
 
-./env.list
-./serversSettings.json
+
+ServerPlanningPoker.code-workspace
