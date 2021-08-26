@@ -1,6 +1,6 @@
 {
     "SQLServer": {
-        "DSN": "server=*;user id=*;password=*;database=*",
+        "DSN": "server=37.140.192.98;user id=u0932131_admin;password=RomanAndrey46;database=u0932131_planningPoker",
         "TypeSql": "mssql"
     },
     "ServerHost": {
@@ -21,8 +21,8 @@
     },
     "SmtpServer": {
         "Host": "smtp.gmail.com",
-        "LoginHost": "*@*",
-        "PassHost": "*",
+        "LoginHost": "planningpoker.ru@gmail.com",
+        "PassHost": "Rom@nkhik1994",
         "PortHost": ":587"
     }
 }
