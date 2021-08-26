@@ -20,8 +20,8 @@
         "RestoreAccount": "change-password-form?linkRestore="
     },
     "SmtpServer": {
-        "Host": "smtp.gmail.com",
-        "LoginHost": "*@*",
+        "Host": "smtp.*.*",
+        "LoginHost": "*",
         "PassHost": "*",
         "PortHost": ":587"
     }
