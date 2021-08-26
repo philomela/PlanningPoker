@@ -1,5 +1,5 @@
 # PlanningPoker.ru
-This repo is site project PlanningPoker
+This repo is site project PlanningPoker.
 PlanningPoker - game for evaluating scrum team tasks
 
 Planning poker is a problem assessment technique based on team discussion of each problem. Each participant anonymously evaluates the problem by voting with a scorecard. Then the cards are revealed and the median for each problem is calculated.
