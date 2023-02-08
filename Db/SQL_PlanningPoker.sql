@@ -1,20 +1,48 @@
-/*Connect DB*/
-USE u0932131_planningPoker
+/*Create DB*/
+IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE [name] = 'PlanningPoker')
+CREATE DATABASE PlanningPoker
 GO
+
+CREATE LOGIN [PlanningPoker] 
+  WITH Password = N'Pa$$word',
+  DEFAULT_DATABASE  = [PlanningPoker]
+  GO
+
+/*Connect DB*/
+IF EXISTS (SELECT 1 FROM sys.databases WHERE [name] = 'PlanningPoker')
+USE PlanningPoker;
+GO
+
 
 /*Create schema in db for system tables*/
-CREATE SCHEMA ServerPlanningPoker AUTHORIZATION u0932131_admin
+IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE [name] = 'ServerPlanningPoker')
+BEGIN 
+	EXEC('CREATE SCHEMA ServerPlanningPoker');
+END
 GO
 
+
+
+  CREATE USER [PlanningPoker] FOR LOGIN [PlanningPoker] WITH DEFAULT_SCHEMA=[ServerPlanningPoker]
+  GO
+  ALTER ROLE [db_owner] ADD MEMBER [PlanningPoker];
+  GO
+
 /*Errors table*/
-CREATE TABLE ServerPlanningPoker.ErrorsLog_Server (
+IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'ErrorsLog_Server')
+	CREATE TABLE ServerPlanningPoker.ErrorsLog_Server (
     Id INT PRIMARY KEY IDENTITY,
     ErrorText VARCHAR(MAX) NOT NULL,
     DateTimeError DATETIME2 NOT NULL,
 )
 GO
 
+
 /*Proc for add errors in error table*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'SaveError')
+DROP PROCEDURE ServerPlanningPoker.[SaveError]
+GO
+
 CREATE PROCEDURE ServerPlanningPoker.[SaveError](@ErrorText VARCHAR(MAX))
     AS
         BEGIN TRANSACTION
@@ -29,6 +57,7 @@ CREATE PROCEDURE ServerPlanningPoker.[SaveError](@ErrorText VARCHAR(MAX))
 GO
 
 /*Rooms table*/
+IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'Rooms')
 CREATE TABLE ServerPlanningPoker.Rooms(
     Id INT PRIMARY KEY IDENTITY,
     NameRoom VARCHAR(200) NOT NULL,
@@ -41,6 +70,7 @@ CREATE TABLE ServerPlanningPoker.Rooms(
 GO
 
 /*Users table*/
+IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'Persons')
 CREATE TABLE ServerPlanningPoker.Persons(
     Id INT PRIMARY KEY IDENTITY,
     LoginName VARCHAR(50) UNIQUE NOT NULL,
@@ -51,6 +81,7 @@ CREATE TABLE ServerPlanningPoker.Persons(
 GO
 
 /*Connections table*/
+IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'Connections')
 CREATE TABLE ServerPlanningPoker.Connections(
     Id INT PRIMARY KEY IDENTITY,
     [GUID] VARCHAR(36),
@@ -61,6 +92,7 @@ CREATE TABLE ServerPlanningPoker.Connections(
 GO 
  
 /*ViewModels table*/
+IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'ViewModels')
 CREATE TABLE ServerPlanningPoker.ViewModels(
     Id INT PRIMARY KEY IDENTITY,
     Source XML,
@@ -70,6 +102,7 @@ CREATE TABLE ServerPlanningPoker.ViewModels(
 GO
 
 /*Tasks table*/
+IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'Tasks')
 CREATE TABLE ServerPlanningPoker.Tasks(
     Id INT PRIMARY KEY IDENTITY,
     [Name] VARCHAR(MAX) NOT NULL,
@@ -83,6 +116,7 @@ CREATE TABLE ServerPlanningPoker.Tasks(
 GO
 
 /*Votes and voices table*/
+IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'Votes')
 CREATE TABLE ServerPlanningPoker.Votes(
     Id INT PRIMARY KEY IDENTITY,
     Vote BIT NOT NULL,
@@ -94,6 +128,7 @@ CREATE TABLE ServerPlanningPoker.Votes(
 GO
 
 /*Task results table*/
+IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'TasksResults')
 CREATE TABLE ServerPlanningPoker.TasksResults(
     Id INT PRIMARY KEY IDENTITY,
     Median DECIMAL(9,2),
@@ -104,6 +139,7 @@ CREATE TABLE ServerPlanningPoker.TasksResults(
 GO
 
 /*Restored accounts table*/
+IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'RestoredAccounts')
 CREATE TABLE ServerPlanningPoker.RestoredAccounts(
     Id INT PRIMARY KEY IDENTITY,
     DateRequest DATETIME2 NOT NULL,
@@ -114,21 +150,27 @@ CREATE TABLE ServerPlanningPoker.RestoredAccounts(
 GO
 
 /*Score-dictionary table*/
+IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'Scores_Dictionary')
+BEGIN
 CREATE TABLE ServerPlanningPoker.Scores_Dictionary (
     Id INT PRIMARY KEY IDENTITY,
     Score INT NOT NULL,
     [Decryption] VARCHAR(300)
-)
-GO
+);
+
 
 /*Init insert score-dictionary table*/
 INSERT INTO ServerPlanningPoker.Scores_Dictionary(Score, [Decryption])
         VALUES(999, 'Coffee break')
               ,(777, 'Question')
               ,(0, 'Not voice')
-GO
+END
+
 
 /*Proc add new user*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'Add_User')
+DROP PROCEDURE ServerPlanningPoker.[Add_User]
+GO
 CREATE PROCEDURE ServerPlanningPoker.[Add_User](@LoginName VARCHAR(50), 
                             @Email VARCHAR(100), 
                             @Password VARCHAR(100))
@@ -161,6 +203,9 @@ CREATE PROCEDURE ServerPlanningPoker.[Add_User](@LoginName VARCHAR(50),
 GO
 
 /*Proc restore account*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'RestoreAccount')
+DROP PROCEDURE ServerPlanningPoker.[RestoreAccount]
+GO
 CREATE PROCEDURE ServerPlanningPoker.[RestoreAccount] (@Link VARCHAR(100),
                                    @Password VARCHAR(100))
     AS
@@ -189,6 +234,9 @@ CREATE PROCEDURE ServerPlanningPoker.[RestoreAccount] (@Link VARCHAR(100),
 GO
 
 /*Proc create link for restore account*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'CreateAccountRecoveryLink')
+DROP PROCEDURE ServerPlanningPoker.[CreateAccountRecoveryLink]
+GO
 CREATE PROCEDURE ServerPlanningPoker.[CreateAccountRecoveryLink] (@Email VARCHAR(100))
     AS
         BEGIN TRANSACTION
@@ -224,6 +272,9 @@ CREATE PROCEDURE ServerPlanningPoker.[CreateAccountRecoveryLink] (@Email VARCHAR
 GO
 
 /*Proc add new room*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'NewPlanningPokerRoom')
+DROP PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom]
+GO
 CREATE PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom](@NameRoom VARCHAR(200), 
                                         @Tasks XML,
                                         @Creator VARCHAR(50))
@@ -268,6 +319,9 @@ CREATE PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom](@NameRoom VARCHAR(20
 GO 
 
 /*Proc get View Model*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'Get_ViewModel')
+DROP PROCEDURE ServerPlanningPoker.[Get_ViewModel]
+GO
 CREATE PROCEDURE ServerPlanningPoker.[Get_ViewModel] (@roomId INT, @xmlVMOut XML OUTPUT)
     AS
         SET @xmlVMOut = ISNULL((SELECT (SELECT P.LoginName AS '@UserName',
@@ -299,6 +353,9 @@ CREATE PROCEDURE ServerPlanningPoker.[Get_ViewModel] (@roomId INT, @xmlVMOut XML
 GO
 
 /*Proc create connection and linked their with room*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'CreateConnection')
+DROP PROCEDURE ServerPlanningPoker.[CreateConnection]
+GO
 CREATE PROCEDURE ServerPlanningPoker.[CreateConnection](@UUID VARCHAR(36), 
                                     @RoomGUID VARCHAR(36),
                                     @Email VARCHAR(100))
@@ -361,6 +418,9 @@ CREATE PROCEDURE ServerPlanningPoker.[CreateConnection](@UUID VARCHAR(36),
 GO 
 
 /*Proc check user*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'CheckUser')
+DROP PROCEDURE ServerPlanningPoker.[CheckUser]
+GO
 CREATE PROCEDURE ServerPlanningPoker.[CheckUser] (@email VARCHAR(100), 
                               @password VARCHAR(100))
     AS  
@@ -377,6 +437,9 @@ CREATE PROCEDURE ServerPlanningPoker.[CheckUser] (@email VARCHAR(100),
 GO
 
 /*Proc check creator room*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'CheckCreator')
+DROP PROCEDURE ServerPlanningPoker.[CheckCreator]
+GO
 CREATE PROCEDURE ServerPlanningPoker.[CheckCreator] (@email VARCHAR(100),
                                 @roomUID VARCHAR(36))
     AS
@@ -393,6 +456,9 @@ CREATE PROCEDURE ServerPlanningPoker.[CheckCreator] (@email VARCHAR(100),
 GO
 
 /*Proc save and get xml ViewModel*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'Push_And_Get_Changes')
+DROP PROCEDURE ServerPlanningPoker.[Push_And_Get_Changes]
+GO
 CREATE PROCEDURE ServerPlanningPoker.[Push_And_Get_Changes] (@xmlChanges XML, 
                                         @nameChanges VARCHAR(50), 
                                         @roomGUID VARCHAR(36), 
@@ -500,6 +566,9 @@ CREATE PROCEDURE ServerPlanningPoker.[Push_And_Get_Changes] (@xmlChanges XML,
 GO
 
 /*Proc check user email*/
+IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'Check_User_Email')
+DROP PROCEDURE ServerPlanningPoker.[Check_User_Email]
+GO
 CREATE PROCEDURE ServerPlanningPoker.[Check_User_Email] (@Email VARCHAR(100))
     AS 
         BEGIN TRANSACTION 
@@ -516,6 +585,9 @@ CREATE PROCEDURE ServerPlanningPoker.[Check_User_Email] (@Email VARCHAR(100))
 GO
 
 /*Check on null or empty*/
+IF EXISTS (SELECT 1 FROM sys.objects WHERE [name] = 'IsNullOrEmpty')
+DROP FUNCTION ServerPlanningPoker.[IsNullOrEmpty]
+GO
 CREATE FUNCTION ServerPlanningPoker.[IsNullOrEmpty](@XmlIn XML) 
     RETURNS BIT
     AS
@@ -545,7 +617,7 @@ CREATE FUNCTION ServerPlanningPoker.[IsNullOrEmpty](@XmlIn XML)
 GO
 
 /*Drop all objects db*/
-DROP TABLE ServerPlanningPoker.[Votes]
+/*DROP TABLE ServerPlanningPoker.[Votes]
 DROP TABLE ServerPlanningPoker.[Tasks]
 DROP TABLE ServerPlanningPoker.[Rooms]
 DROP TABLE ServerPlanningPoker.[ErrorsLog_Server] 
@@ -567,4 +639,4 @@ DROP PROCEDURE ServerPlanningPoker.[CheckCreator]
 DROP PROCEDURE ServerPlanningPoker.[CheckUser]
 DROP PROCEDURE ServerPlanningPoker.[SaveError]
 DROP FUNCTION ServerPlanningPoker.[IsNullOrEmpty]
-DROP SCHEMA [ServerPlanningPoker]
+DROP SCHEMA [ServerPlanningPoker]*/

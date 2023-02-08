@@ -1,6 +1,6 @@
 {
     "SQLServer": {
-        "DSN": "server=*;user id=*;password=*;database=*",
+        "DSN": "server=localhost;database=PlanningPoker;user id=PlanningPoker;password=Pa$$word", 
         "TypeSql": "mssql"
     },
     "ServerHost": {
