@@ -2,7 +2,7 @@
 #do this in a loop because the timing for when the SQL instance is ready is indeterminate
 for i in {1..50};
 do
-    /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Yukon900 -d master -i Db/SQL_PlanningPoker.sql
+    /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Yukon_900 -d master -i SQL_PlanningPoker.sql
     if [ $? -eq 0 ]
     then
         echo "SQL_PlanningPoker.sql completed"

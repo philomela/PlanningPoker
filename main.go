@@ -73,7 +73,7 @@ func main() {
 	router.PathPrefix("/templates/").Handler(http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 
 	fmt.Println("Connecting to Db...")
-	time.Sleep(80 * time.Second)
+	time.Sleep(90 * time.Second)
 	currentSqlServer, err = PlanningPokerSettings.ServerSql{DSN: currentServerSettings.SQLServer.DSN, TypeSql: currentServerSettings.SQLServer.TypeSql}.OpenConnection()
 
 	fmt.Println("Server succsesful configured. ©Roman Solovyev")

@@ -1,26 +1,19 @@
-FROM mcr.microsoft.com/mssql/server:2019-latest
-FROM golang:latest
+FROM mcr.microsoft.com/mssql/server
 
-ENV ID=sa
 ENV ACCEPT_EULA=Y
-ENV MSSQL_SA_PASSWORD=Yukon900
-ENV MSSQL_PID=Express
+ENV MSSQL_SA_PASSWORD=Yukon_900
 
-EXPOSE 1433
-
+USER root
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 COPY . /usr/src/app
 
-RUN go build -o main .
+RUN chmod +x ./run-initialization.sh
 
-USER root
-
-RUN chmod +x /usr/src/app/Db/run-initialization.sh
+EXPOSE 1433
 
 USER mssql
 
-CMD /bin/bash Db/entrypoint.sh
-ENTRYPOINT ["main"]
+CMD /bin/bash ./entrypoint.sh

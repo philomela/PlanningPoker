@@ -1,6 +1,11 @@
 version: "3.7"
 
 services: 
+    mssql:
+        build: ./Db
+        ports:
+            - 1433:1433
+
     planning-poker:
         build: .
         restart: always
@@ -8,4 +13,6 @@ services:
             - env.list
         ports:
             - 80:8080
-            - 1433:1433
+        depends_on:
+            - mssql
+    
