@@ -72,9 +72,16 @@ func main() {
 	router.HandleFunc("/", indexHandler).Methods("GET")
 	router.PathPrefix("/templates/").Handler(http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 
-	fmt.Println("Connecting to Db...")
-	time.Sleep(90 * time.Second)
+	fmt.Println("Connecting to db...")
+
+	time.Sleep(time.Duration(currentServerSettings.ServerHost.StartDelayDb) * time.Second)
+
 	currentSqlServer, err = PlanningPokerSettings.ServerSql{DSN: currentServerSettings.SQLServer.DSN, TypeSql: currentServerSettings.SQLServer.TypeSql}.OpenConnection()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("Connected db")
 
 	fmt.Println("Server succsesful configured. ©Roman Solovyev")
 

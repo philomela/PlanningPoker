@@ -1,22 +1,22 @@
 {
     "SQLServer": {
-        "DSN": "server=127.0.0.1,1433;database=PlanningPoker;user id=PlanningPoker;password=Pa$$word;integrated security=false", 
+        "DSN": "server=mssql;user id=PlanningPoker;password=Pa$$word;database=PlanningPoker;", 
         "TypeSql": "mssql"
     },
     "ServerHost": {
         "Protocol": "http://",
         "Host": "localhost",
-        "Port": ":8080",
-        "InternalHostName": "http://localhost:8080/",
-        "ExternalHostName": "http://localhost:8080/",
+        "Port": ":80",
+        "InternalHostName": "http://localhost/",
+        "ExternalHostName": "http://localhost/",
         "Room": "rooms?roomId=",
-        "ExternalPathToLoginForm": "http://localhost:8080/loginform",
-        "ExternalPathToNewRoom": "http://localhost:8080/newroom",
-        "ExternalPathToRegistrationForm": "http://localhost:8080/registrationform",
-        "ExternalPathToRestoreAcc": "http://localhost:8080/restore-account",
-        "ExternalPathToChangePass": "http://localhost:8080/update-password",
+        "ExternalPathToLoginForm": "http://localhost/loginform",
+        "ExternalPathToNewRoom": "http://localhost/newroom",
+        "ExternalPathToRegistrationForm": "http://localhost/registrationform",
+        "ExternalPathToRestoreAcc": "http://localhost/restore-account",
+        "ExternalPathToChangePass": "http://localhost/update-password",
         "WebSocketProtocol": "ws://",
-        "WebSocketExternalAddress": "ws://localhost:8080/echo?roomId=",
+        "WebSocketExternalAddress": "ws://localhost/echo?roomId=",
         "RestoreAccount": "change-password-form?linkRestore="
     },
     "SmtpServer": {

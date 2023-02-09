@@ -1,18 +1,28 @@
 version: "3.7"
 
+networks:
+    planning-poker-network:
+
 services: 
     mssql:
+        container_name: mssql
         build: ./Db
         ports:
             - 1433:1433
+        networks:
+            - planning-poker-network
 
     planning-poker:
+        container_name: planning-poker-app
         build: .
         restart: always
         env_file:
             - env.list
         ports:
-            - 80:8080
+            - 80:80
         depends_on:
             - mssql
+        networks:
+            - planning-poker-network
+
     

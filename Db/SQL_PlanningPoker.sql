@@ -1,18 +1,24 @@
+SET QUOTED_IDENTIFIER ON
+SET ANSI_NULLS ON
+
 /*Create DB*/
 IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE [name] = 'PlanningPoker')
 CREATE DATABASE PlanningPoker
 GO
-
-CREATE LOGIN [PlanningPoker] 
-  WITH Password = N'Pa$$word',
-  DEFAULT_DATABASE  = [PlanningPoker]
-  GO
 
 /*Connect DB*/
 IF EXISTS (SELECT 1 FROM sys.databases WHERE [name] = 'PlanningPoker')
 USE PlanningPoker;
 GO
 
+/*Create login and user*/
+IF NOT EXISTS (SELECT 1 FROM sys.sql_logins WHERE [name] = 'PlanningPoker')
+CREATE LOGIN [PlanningPoker] 
+  WITH Password = N'Pa$$word',
+  DEFAULT_DATABASE  = [PlanningPoker]
+  CREATE USER [PlanningPoker] FOR LOGIN [PlanningPoker] WITH DEFAULT_SCHEMA=[ServerPlanningPoker]
+  ALTER ROLE [db_owner] ADD MEMBER [PlanningPoker];
+GO
 
 /*Create schema in db for system tables*/
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE [name] = 'ServerPlanningPoker')
@@ -21,28 +27,19 @@ BEGIN
 END
 GO
 
-
-
-  CREATE USER [PlanningPoker] FOR LOGIN [PlanningPoker] WITH DEFAULT_SCHEMA=[ServerPlanningPoker]
-  GO
-  ALTER ROLE [db_owner] ADD MEMBER [PlanningPoker];
-  GO
-
 /*Errors table*/
 IF NOT EXISTS(SELECT 1 FROM sys.all_objects where [name] = 'ErrorsLog_Server')
-	CREATE TABLE ServerPlanningPoker.ErrorsLog_Server (
+CREATE TABLE ServerPlanningPoker.ErrorsLog_Server (
     Id INT PRIMARY KEY IDENTITY,
     ErrorText VARCHAR(MAX) NOT NULL,
     DateTimeError DATETIME2 NOT NULL,
 )
 GO
 
-
 /*Proc for add errors in error table*/
 IF EXISTS (SELECT 1 FROM sys.procedures WHERE [name] = 'SaveError')
 DROP PROCEDURE ServerPlanningPoker.[SaveError]
 GO
-
 CREATE PROCEDURE ServerPlanningPoker.[SaveError](@ErrorText VARCHAR(MAX))
     AS
         BEGIN TRANSACTION
