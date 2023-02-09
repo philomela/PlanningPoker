@@ -24,4 +24,9 @@ For local working this project, restoring database and start run sql scripts fro
 * Step 3. ```docker-compose up -d --build --force-recreate```
 * Step 4. Wait db inti scripts and ```localhost``` address app
 
+#### Troubleshoutings:
+When running through docker, there may be a problem related to
+```./run-initialization.sh: line 3: syntax error near unexpected token `$'\r''```
+Change line breaks to Unix lf in all related files.
+
 enjoy!:heart:
