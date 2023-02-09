@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 )
 
 const settingsFileDir string = "./serversSettings.json"
@@ -30,6 +31,7 @@ type ServerHost struct {
 	WebSocketExternalAddress       string
 	RestoreAccount                 string
 	ExternalPathToRegistrationForm string
+	StartDelayDb                   int
 }
 
 type ServerSmtp struct {
@@ -75,5 +77,6 @@ func (s *ServerSettings) InitSettingFromEnvVariables(envParam string) {
 		s.ServerHost.ExternalPathToChangePass = os.Getenv("PLANNING_POKER_EXT_PATH_CHANGEPASS")
 		s.ServerHost.WebSocketProtocol = os.Getenv("PLANNING_POKER_WEBSOCKET_PROTOCOL")
 		s.ServerHost.WebSocketExternalAddress = os.Getenv("PLANNING_POKER_WEBSOCKET_EXTERNALADDRESS")
+		s.ServerHost.StartDelayDb, _ = strconv.Atoi(os.Getenv("APP_ENV_START_DELAY"))
 	}
 }
