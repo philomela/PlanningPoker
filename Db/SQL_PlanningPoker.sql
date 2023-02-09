@@ -612,28 +612,3 @@ CREATE FUNCTION ServerPlanningPoker.[IsNullOrEmpty](@XmlIn XML)
             RETURN @OutVal;
         END
 GO
-
-/*Drop all objects db*/
-/*DROP TABLE ServerPlanningPoker.[Votes]
-DROP TABLE ServerPlanningPoker.[Tasks]
-DROP TABLE ServerPlanningPoker.[Rooms]
-DROP TABLE ServerPlanningPoker.[ErrorsLog_Server] 
-DROP TABLE ServerPlanningPoker.[Connections]
-DROP TABLE ServerPlanningPoker.[ViewModels]
-DROP TABLE ServerPlanningPoker.[Persons]
-DROP TABLE ServerPlanningPoker.[TasksResults]
-DROP TABLE ServerPlanningPoker.[Scores_Dictionary]
-DROP TABLE ServerPlanningPoker.[RestoredAccounts]
-DROP PROCEDURE ServerPlanningPoker.[NewPlanningPokerRoom]
-DROP PROCEDURE ServerPlanningPoker.[Add_User]
-DROP PROCEDURE ServerPlanningPoker.[CreateConnection]
-DROP PROCEDURE ServerPlanningPoker.[Get_ViewModel]
-DROP PROCEDURE ServerPlanningPoker.[Push_And_Get_Changes]
-DROP PROCEDURE ServerPlanningPoker.[CreateAccountRecoveryLink]
-DROP PROCEDURE ServerPlanningPoker.[RestoreAccount]
-DROP PROCEDURE ServerPlanningPoker.[Check_User_Email]
-DROP PROCEDURE ServerPlanningPoker.[CheckCreator]
-DROP PROCEDURE ServerPlanningPoker.[CheckUser]
-DROP PROCEDURE ServerPlanningPoker.[SaveError]
-DROP FUNCTION ServerPlanningPoker.[IsNullOrEmpty]
-DROP SCHEMA [ServerPlanningPoker]*/
