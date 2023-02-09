@@ -12,21 +12,27 @@ For local working this project, restoring database and start run sql scripts fro
 
 #### Run in local use command:
 * Step 1. ```cd <YourPathToProject>```
-* Step 2. Change server in connection string on localhost 
-```server=localhost;user id=PlanningPoker;password=Pa$$word;database=PlanningPoker;```
+* Step 2. Change server in connection string on localhost  
+
+```server=localhost;user id=PlanningPoker;password=Pa$$word;database=PlanningPoker;```  
+
 * Step 3. ```go run main.go```
 * Step 4. ```localhost``` - address app.
 
 #### Run in Docker use command:
 * Step 1. ```cd <YourPathToProject>```
-* Step 2. Change server in connection string on mssql 
-```server=mssql;user id=PlanningPoker;password=Pa$$word;database=PlanningPoker;```
+* Step 2. Change server in connection string on mssql  
+
+```server=mssql;user id=PlanningPoker;password=Pa$$word;database=PlanningPoker;```  
+
 * Step 3. ```docker-compose up -d --build --force-recreate```
 * Step 4. Wait db inti scripts and ```localhost``` address app
 
 #### Troubleshoutings:
-When running through docker, there may be a problem related to
-```./run-initialization.sh: line 3: syntax error near unexpected token `$'\r''```
+When running through docker, there may be a problem related to  
+
+```./run-initialization.sh: line 3: syntax error near unexpected token `$'\r''```  
+
 Change line breaks to Unix lf in all related files.
 
 enjoy!:heart:
